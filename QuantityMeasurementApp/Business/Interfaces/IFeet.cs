@@ -2,6 +2,6 @@ namespace QuantityMeasurementApp.Business.Interfaces
 {
     internal interface IFeet
     {
-        void CompareFeet();
+        void CompareFeet(double input1, double input2);
     }
 }
