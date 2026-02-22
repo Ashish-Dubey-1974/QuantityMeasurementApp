@@ -227,6 +227,87 @@ namespace QuantityMeasurement.Tests
 
             Assert.IsTrue(result.Equals(new QuantityLength(3.0, LengthUnit.Feet)));
         }
+        //Testing addition of two lengths in the same unit
+        [TestMethod]
+        public void TestAddition_ExplicitTargetUnit_Feet()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Feet);
+            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.Inch);
+
+            QuantityLength result =
+                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.Feet);
+
+            Assert.IsTrue(result.Equals(new QuantityLength(2.0, LengthUnit.Feet)));
+        }
+        //Testing addition of two lengths with an invalid target unit should throw an exception
+        [TestMethod]
+        public void TestAddition_ExplicitTargetUnit_Inches()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Feet);
+            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.Inch);
+
+            QuantityLength result =
+                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.Inch);
+
+            Assert.IsTrue(result.Equals(new QuantityLength(24.0, LengthUnit.Inch)));
+        }
+        //Testing addition of two lengths with an invalid target unit should throw an exception
+        [TestMethod]
+        public void TestAddition_ExplicitTargetUnit_Yards()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Feet);
+            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.Inch);
+
+            QuantityLength result =
+                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.Yard);
+
+            Assert.IsTrue(result.Equals(new QuantityLength(0.666666, LengthUnit.Yard)));
+        }
+        //Testing addition of two lengths with an invalid target unit should throw an exception
+        [TestMethod]
+        public void TestAddition_ExplicitTargetUnit_Centimeter()
+        {
+            QuantityLength q1 = new QuantityLength(2.54, LengthUnit.Centimeter);
+            QuantityLength q2 = new QuantityLength(1.0, LengthUnit.Inch);
+
+            QuantityLength result =
+                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.Centimeter);
+
+            Assert.IsTrue(result.Equals(new QuantityLength(5.08, LengthUnit.Centimeter)));
+        }
+        //Testing addition of two lengths with an invalid target unit should throw an exception
+        [TestMethod]
+        public void TestAddition_ExplicitTargetUnit_Commutativity()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Feet);
+            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.Inch);
+
+            QuantityLength r1 =
+                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.Yard);
+
+            QuantityLength r2 =
+                QuantityLength.AddTwoUnits_TargetUnit(q2, q1, LengthUnit.Yard);
+
+            Assert.IsTrue(r1.Equals(r2));
+        }
+        //Testing addition of two lengths with an invalid target unit should throw an exception
+        [TestMethod]
+        public void TestAddition_ExplicitTargetUnit_InvalidTarget()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Feet);
+            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.Inch);
+
+            try
+            {
+                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, (LengthUnit)999);
+                Assert.Fail("Expected ArgumentException not thrown");
+            }
+            catch (ArgumentException)
+            {
+                // pass
+            }
+        }
+
 
 
     }
