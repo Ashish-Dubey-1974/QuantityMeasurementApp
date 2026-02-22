@@ -1,37 +1,37 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using QuantityMeasurementApp.Model;
-
 namespace QuantityMeasurement.Tests
 {
     [TestClass]
-    public class FeetTest
+    public
+    class InchesTest
     {
         // test same value should return true
         [TestMethod]
         public void testEquality_SameValue()
         {
-            Feet f1 = new Feet(1.0);
-            Feet f2 = new Feet(1.0);
-            bool result = f1.Equals(f2);
-            Assert.IsTrue(result, "1.0 ft should be equal to 1.0 ft");
+            Inches i1 = new Inches(12.0);
+            Inches i2 = new Inches(12.0);
+            bool result = i1.Equals(i2);
+            Assert.IsTrue(result, "12.0 in should be equal to 12.0 in");
         }
 
         // test different value should return false
         [TestMethod]
         public void testEquality_DifferentValue()
         {
-            Feet f1 = new Feet(1.0);
-            Feet f2 = new Feet(2.0);
-            bool result = f1.Equals(f2);
-            Assert.IsFalse(result, "1.0 ft should not equal 2.0 ft");
+            Inches i1 = new Inches(12.0);
+            Inches i2 = new Inches(24.0);
+            bool result = i1.Equals(i2);
+            Assert.IsFalse(result, "12.0 in should not equal 24.0 in");
         }
 
         // test null comparison
         [TestMethod]
         public void testEquality_NullComparison()
         {
-            Feet f1 = new Feet(1.0);
-            bool result = f1.Equals(null);
+            Inches i1 = new Inches(12.0);
+            bool result = i1.Equals(null);
             Assert.IsFalse(result, "object should not equal null");
         }
 
@@ -39,8 +39,8 @@ namespace QuantityMeasurement.Tests
         [TestMethod]
         public void testEquality_SameReference()
         {
-            Feet f1 = new Feet(1.0);
-            bool result = f1.Equals(f1);
+            Inches i1 = new Inches(12.0);
+            bool result = i1.Equals(i1);
             Assert.IsTrue(result, "object must equal itself");
         }
 
@@ -48,10 +48,10 @@ namespace QuantityMeasurement.Tests
         [TestMethod]
         public void testEquality_NonNumericInput()
         {
-            Feet f1 = new Feet(1.0);
+            Inches i1 = new Inches(12.0);
             object other = "not number";
-            bool result = f1.Equals(other);
-            Assert.IsFalse(result, "Feet should not equal non Feet object");
+            bool result = i1.Equals(other);
+            Assert.IsFalse(result, "Inches should not equal non Inches object");
         }
     }
 }
