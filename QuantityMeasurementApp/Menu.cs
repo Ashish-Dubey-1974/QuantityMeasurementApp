@@ -8,21 +8,44 @@ namespace QuantityMeasurementApp
         public static void StartApp()
         {
 
-            IQuantityLength utility = new QuantityLengthUtility();
+            Console.WriteLine("1. Compare Length");
+            Console.WriteLine("2. Convert Length");
 
-            Console.Write("Enter First Value: ");
-            double value1 = Convert.ToDouble(Console.ReadLine());
+            int choice = Convert.ToInt32(Console.ReadLine());
 
-            Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
-            LengthUnit unit1 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+            if (choice == 1)
+            {
+                IQuantityLength utility = new QuantityLengthUtility();
 
-            Console.Write("Enter Second Value: ");
-            double value2 = Convert.ToDouble(Console.ReadLine());
+                Console.Write("Enter First Value: ");
+                double value1 = Convert.ToDouble(Console.ReadLine());
 
-            Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
-            LengthUnit unit2 = (LengthUnit)Enum.Parse(typeof(LengthUnit),Console.ReadLine(),true);
-            bool result = utility.CheckEquality(value1, unit1, value2, unit2);
-            Console.WriteLine("Equality Result: " + result);
+                Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
+                LengthUnit unit1 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+
+                Console.Write("Enter Second Value: ");
+                double value2 = Convert.ToDouble(Console.ReadLine());
+
+                Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
+                LengthUnit unit2 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+                bool result = utility.CheckEquality(value1, unit1, value2, unit2);
+                Console.WriteLine("Equality Result: " + result);
+            }
+            else if (choice == 2)
+            {
+                Console.WriteLine("Enter Value:");
+                double value = Convert.ToDouble(Console.ReadLine());
+
+                Console.WriteLine("Enter Source Unit (Feet/Inch/Yard/Centimeter):");
+                LengthUnit source = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+
+                Console.WriteLine("Enter Target Unit (Feet/Inch/Yard/Centimeter):");
+                LengthUnit target = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+
+                double result = QuantityLength.Convert(value, source, target);
+
+                Console.WriteLine("Converted Value: " + result);
+            }
 
         }
     }
