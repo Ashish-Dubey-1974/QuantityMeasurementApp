@@ -6,74 +6,93 @@ namespace QuantityMeasurementApp.Model
     {
         private readonly double value;
         private readonly LengthUnit unit;
+        private const double EPSILON = 0.0001;
+
         public QuantityLength(double value, LengthUnit unit)
         {
             if (Double.IsNaN(value) || Double.IsInfinity(value))
                 throw new ArgumentException("Value must be finite number.");
+
             this.value = value;
             this.unit = unit;
         }
 
+        // ===============================
+        // BASE CONVERSION HELPERS
+        // ===============================
+
+        // Convert current object to base unit (Inch)
         private double ConvertToInch()
         {
-            if (unit == LengthUnit.Feet)
-                return value * 12;
-            if (unit == LengthUnit.Inch)
-                return value;
-            if (unit == LengthUnit.Yard)
-                return value * 36;
-            if (unit == LengthUnit.Centimeter)
-                return value * 0.393701;
-            throw new ArgumentException("Invalid unit");
+            return Convert(value, unit, LengthUnit.Inch);
         }
-        // Static method to convert between units
+
+        // ===============================
+        // UC5: Static Conversion API
+        // ===============================
+
         public static double Convert(double value, LengthUnit source, LengthUnit target)
         {
             if (source == target)
                 return value;
 
-            QuantityLength temp = new QuantityLength(value, source);
-            double valueInInch = temp.ConvertToInch();
+            double valueInInch;
 
+            // Convert source → Inch (Base Unit)
+            if (source == LengthUnit.Feet)
+                valueInInch = value * 12;
+            else if (source == LengthUnit.Inch)
+                valueInInch = value;
+            else if (source == LengthUnit.Yard)
+                valueInInch = value * 36;
+            else if (source == LengthUnit.Centimeter)
+                valueInInch = value * 0.393701;
+            else
+                throw new ArgumentException("Invalid source unit");
+
+            // Convert Inch → Target
             if (target == LengthUnit.Feet)
                 return valueInInch / 12;
-            if (target == LengthUnit.Inch)
+            else if (target == LengthUnit.Inch)
                 return valueInInch;
-            if (target == LengthUnit.Yard)
+            else if (target == LengthUnit.Yard)
                 return valueInInch / 36;
-            if (target == LengthUnit.Centimeter)
+            else if (target == LengthUnit.Centimeter)
                 return valueInInch / 0.393701;
-            throw new ArgumentException("Invalid target unit");
+            else
+                throw new ArgumentException("Invalid target unit");
         }
 
-        // Method to add two QuantityLength objects
+        // ===============================
+        // PRIVATE ADDITION HELPER (DRY)
+        // ===============================
+
+        private static double AddInBaseUnit(QuantityLength l1, QuantityLength l2)
+        {
+            return l1.ConvertToInch() + l2.ConvertToInch();
+        }
+
+        // ===============================
+        // UC6: Add (Result in First Operand Unit)
+        // ===============================
+
         public QuantityLength Add(QuantityLength other)
         {
             if (other == null)
                 throw new ArgumentException("Second operand cannot be null");
 
-            double thisInInch = this.ConvertToInch();
-            double otherInInch = other.ConvertToInch();
+            double sumInInch = AddInBaseUnit(this, other);
 
-            double sumInInch = thisInInch + otherInInch;
-
-            double resultValue;
-
-            if (this.unit == LengthUnit.Feet)
-                resultValue = sumInInch / 12;
-            else if (this.unit == LengthUnit.Inch)
-                resultValue = sumInInch;
-            else if (this.unit == LengthUnit.Yard)
-                resultValue = sumInInch / 36;
-            else if (this.unit == LengthUnit.Centimeter)
-                resultValue = sumInInch / 0.393701;
-            else
-                throw new ArgumentException("Invalid unit");
+            double resultValue = Convert(sumInInch, LengthUnit.Inch, this.unit);
 
             return new QuantityLength(resultValue, this.unit);
         }
-        // Static method to add two QuantityLength objects
-        public static QuantityLength Add(QuantityLength l1, QuantityLength l2)
+
+        // ===============================
+        // UC6 Static Version
+        // ===============================
+
+        public static QuantityLength AddTwoUnits(QuantityLength l1, QuantityLength l2)
         {
             if (l1 == null || l2 == null)
                 throw new ArgumentException("Operands cannot be null");
@@ -81,22 +100,45 @@ namespace QuantityMeasurementApp.Model
             return l1.Add(l2);
         }
 
+        // ===============================
+        // UC7: Add With Explicit Target Unit
+        // ===============================
+
+        public static QuantityLength AddTwoUnits_TargetUnit(
+            QuantityLength l1,
+            QuantityLength l2,
+            LengthUnit targetUnit)
+        {
+            if (l1 == null || l2 == null)
+                throw new ArgumentException("Operands cannot be null");
+
+            double sumInInch = AddInBaseUnit(l1, l2);
+
+            double resultValue = Convert(sumInInch, LengthUnit.Inch, targetUnit);
+
+            return new QuantityLength(resultValue, targetUnit);
+        }
+
+        // ===============================
+        // Equality Override
+        // ===============================
 
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
             if (this == obj) return true;
             if (!(obj is QuantityLength)) return false;
+
             QuantityLength other = (QuantityLength)obj;
-            double thisInInch = this.ConvertToInch();
-            double otherInInch = other.ConvertToInch();
-            return Math.Abs(thisInInch - otherInInch) < 0.000001;
+
+            return Math.Abs(this.ConvertToInch() - other.ConvertToInch()) < EPSILON;
         }
 
         public override int GetHashCode()
         {
             return ConvertToInch().GetHashCode();
         }
+
         public override string ToString()
         {
             return value + " " + unit;
