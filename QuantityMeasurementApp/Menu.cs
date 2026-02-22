@@ -10,20 +10,18 @@ namespace QuantityMeasurementApp
 
             IQuantityLength utility = new QuantityLengthUtility();
 
-            Console.WriteLine("Enter First Value:");
+            Console.Write("Enter First Value: ");
             double value1 = Convert.ToDouble(Console.ReadLine());
 
-            Console.WriteLine("Enter First Unit (Feet/Inch):");
+            Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
             LengthUnit unit1 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
 
-            Console.WriteLine("Enter Second Value:");
+            Console.Write("Enter Second Value: ");
             double value2 = Convert.ToDouble(Console.ReadLine());
 
-            Console.WriteLine("Enter Second Unit (Feet/Inch):");
-            LengthUnit unit2 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
-
+            Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
+            LengthUnit unit2 = (LengthUnit)Enum.Parse(typeof(LengthUnit),Console.ReadLine(),true);
             bool result = utility.CheckEquality(value1, unit1, value2, unit2);
-
             Console.WriteLine("Equality Result: " + result);
 
         }
