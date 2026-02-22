@@ -13,77 +13,41 @@ namespace QuantityMeasurementApp.Model
             if (Double.IsNaN(value) || Double.IsInfinity(value))
                 throw new ArgumentException("Value must be finite number.");
 
+            if (!Enum.IsDefined(typeof(LengthUnit), unit))
+                throw new ArgumentException("Invalid unit.");
+
             this.value = value;
             this.unit = unit;
         }
 
         // ===============================
-        // BASE CONVERSION HELPERS
+        // Convert current value to FEET (Base)
         // ===============================
-
-        // Convert current object to base unit (Inch)
-        private double ConvertToInch()
+        private double ConvertToBase()
         {
-            return Convert(value, unit, LengthUnit.Inch);
+            return unit.ConvertToBaseUnit(value);
         }
 
         // ===============================
-        // UC5: Static Conversion API
+        // UC5: Static Conversion API (Backward Compatible)
         // ===============================
-
         public static double Convert(double value, LengthUnit source, LengthUnit target)
         {
-            if (source == target)
-                return value;
-
-            double valueInInch;
-
-            // Convert source → Inch (Base Unit)
-            if (source == LengthUnit.Feet)
-                valueInInch = value * 12;
-            else if (source == LengthUnit.Inch)
-                valueInInch = value;
-            else if (source == LengthUnit.Yard)
-                valueInInch = value * 36;
-            else if (source == LengthUnit.Centimeter)
-                valueInInch = value * 0.393701;
-            else
-                throw new ArgumentException("Invalid source unit");
-
-            // Convert Inch → Target
-            if (target == LengthUnit.Feet)
-                return valueInInch / 12;
-            else if (target == LengthUnit.Inch)
-                return valueInInch;
-            else if (target == LengthUnit.Yard)
-                return valueInInch / 36;
-            else if (target == LengthUnit.Centimeter)
-                return valueInInch / 0.393701;
-            else
-                throw new ArgumentException("Invalid target unit");
-        }
-
-        // ===============================
-        // PRIVATE ADDITION HELPER (DRY)
-        // ===============================
-
-        private static double AddInBaseUnit(QuantityLength l1, QuantityLength l2)
-        {
-            return l1.ConvertToInch() + l2.ConvertToInch();
+            double baseValue = source.ConvertToBaseUnit(value);
+            return target.ConvertFromBaseUnit(baseValue);
         }
 
         // ===============================
         // UC6: Add (Result in First Operand Unit)
         // ===============================
-
         public QuantityLength Add(QuantityLength other)
         {
             if (other == null)
                 throw new ArgumentException("Second operand cannot be null");
 
-            double sumInInch = AddInBaseUnit(this, other);
+            double sumInBase = this.ConvertToBase() + other.ConvertToBase();
 
-            double resultValue = Convert(sumInInch, LengthUnit.Inch, this.unit);
+            double resultValue = this.unit.ConvertFromBaseUnit(sumInBase);
 
             return new QuantityLength(resultValue, this.unit);
         }
@@ -91,7 +55,6 @@ namespace QuantityMeasurementApp.Model
         // ===============================
         // UC6 Static Version
         // ===============================
-
         public static QuantityLength AddTwoUnits(QuantityLength l1, QuantityLength l2)
         {
             if (l1 == null || l2 == null)
@@ -103,7 +66,6 @@ namespace QuantityMeasurementApp.Model
         // ===============================
         // UC7: Add With Explicit Target Unit
         // ===============================
-
         public static QuantityLength AddTwoUnits_TargetUnit(
             QuantityLength l1,
             QuantityLength l2,
@@ -112,17 +74,16 @@ namespace QuantityMeasurementApp.Model
             if (l1 == null || l2 == null)
                 throw new ArgumentException("Operands cannot be null");
 
-            double sumInInch = AddInBaseUnit(l1, l2);
+            double sumInBase = l1.ConvertToBase() + l2.ConvertToBase();
 
-            double resultValue = Convert(sumInInch, LengthUnit.Inch, targetUnit);
+            double resultValue = targetUnit.ConvertFromBaseUnit(sumInBase);
 
             return new QuantityLength(resultValue, targetUnit);
         }
 
         // ===============================
-        // Equality Override
+        // Equality Override (Uses Base Unit)
         // ===============================
-
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
@@ -131,12 +92,12 @@ namespace QuantityMeasurementApp.Model
 
             QuantityLength other = (QuantityLength)obj;
 
-            return Math.Abs(this.ConvertToInch() - other.ConvertToInch()) < EPSILON;
+            return Math.Abs(this.ConvertToBase() - other.ConvertToBase()) < EPSILON;
         }
 
         public override int GetHashCode()
         {
-            return ConvertToInch().GetHashCode();
+            return ConvertToBase().GetHashCode();
         }
 
         public override string ToString()
