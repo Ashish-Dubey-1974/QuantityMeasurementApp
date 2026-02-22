@@ -12,9 +12,7 @@ namespace QuantityMeasurement.Tests
         {
             Feet f1 = new Feet(1.0);
             Feet f2 = new Feet(1.0);
-
             bool result = f1.Equals(f2);
-
             Assert.IsTrue(result, "1.0 ft should be equal to 1.0 ft");
         }
 
@@ -24,9 +22,7 @@ namespace QuantityMeasurement.Tests
         {
             Feet f1 = new Feet(1.0);
             Feet f2 = new Feet(2.0);
-
             bool result = f1.Equals(f2);
-
             Assert.IsFalse(result, "1.0 ft should not equal 2.0 ft");
         }
 
@@ -35,9 +31,7 @@ namespace QuantityMeasurement.Tests
         public void testEquality_NullComparison()
         {
             Feet f1 = new Feet(1.0);
-
             bool result = f1.Equals(null);
-
             Assert.IsFalse(result, "object should not equal null");
         }
 
@@ -46,9 +40,7 @@ namespace QuantityMeasurement.Tests
         public void testEquality_SameReference()
         {
             Feet f1 = new Feet(1.0);
-
             bool result = f1.Equals(f1);
-
             Assert.IsTrue(result, "object must equal itself");
         }
 
@@ -57,11 +49,8 @@ namespace QuantityMeasurement.Tests
         public void testEquality_NonNumericInput()
         {
             Feet f1 = new Feet(1.0);
-
             object other = "not number";
-
             bool result = f1.Equals(other);
-
             Assert.IsFalse(result, "Feet should not equal non Feet object");
         }
     }
