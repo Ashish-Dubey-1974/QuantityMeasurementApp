@@ -10,6 +10,7 @@ namespace QuantityMeasurementApp
 
             Console.WriteLine("1. Compare Length");
             Console.WriteLine("2. Convert Length");
+            Console.WriteLine("3. Add Length");
 
             int choice = Convert.ToInt32(Console.ReadLine());
 
@@ -45,6 +46,31 @@ namespace QuantityMeasurementApp
                 double result = QuantityLength.Convert(value, source, target);
 
                 Console.WriteLine("Converted Value: " + result);
+            }
+            else if (choice == 3)
+            {
+                Console.Write("Enter First Value: ");
+                double value1 = Convert.ToDouble(Console.ReadLine());
+
+                Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
+                LengthUnit unit1 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+
+                Console.Write("Enter Second Value: ");
+                double value2 = Convert.ToDouble(Console.ReadLine());
+
+                Console.Write("Enter Unit (Feet/Inch/Yard/Centimeter): ");
+                LengthUnit unit2 = (LengthUnit)Enum.Parse(typeof(LengthUnit), Console.ReadLine(), true);
+
+                QuantityLength q1 = new QuantityLength(value1, unit1);
+                QuantityLength q2 = new QuantityLength(value2, unit2);
+
+                QuantityLength result = QuantityLength.Add(q1,q2);
+
+                Console.WriteLine("Addition Result: " + result);
+            }
+            else
+            {
+                Console.WriteLine("Invalid choice.");
             }
 
         }

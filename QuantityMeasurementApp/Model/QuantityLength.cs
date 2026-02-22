@@ -26,11 +26,12 @@ namespace QuantityMeasurementApp.Model
                 return value * 0.393701;
             throw new ArgumentException("Invalid unit");
         }
+        // Static method to convert between units
         public static double Convert(double value, LengthUnit source, LengthUnit target)
         {
-            if(source == target)
+            if (source == target)
                 return value;
-                
+
             QuantityLength temp = new QuantityLength(value, source);
             double valueInInch = temp.ConvertToInch();
 
@@ -44,6 +45,43 @@ namespace QuantityMeasurementApp.Model
                 return valueInInch / 0.393701;
             throw new ArgumentException("Invalid target unit");
         }
+
+        // Method to add two QuantityLength objects
+        public QuantityLength Add(QuantityLength other)
+        {
+            if (other == null)
+                throw new ArgumentException("Second operand cannot be null");
+
+            double thisInInch = this.ConvertToInch();
+            double otherInInch = other.ConvertToInch();
+
+            double sumInInch = thisInInch + otherInInch;
+
+            double resultValue;
+
+            if (this.unit == LengthUnit.Feet)
+                resultValue = sumInInch / 12;
+            else if (this.unit == LengthUnit.Inch)
+                resultValue = sumInInch;
+            else if (this.unit == LengthUnit.Yard)
+                resultValue = sumInInch / 36;
+            else if (this.unit == LengthUnit.Centimeter)
+                resultValue = sumInInch / 0.393701;
+            else
+                throw new ArgumentException("Invalid unit");
+
+            return new QuantityLength(resultValue, this.unit);
+        }
+        // Static method to add two QuantityLength objects
+        public static QuantityLength Add(QuantityLength l1, QuantityLength l2)
+        {
+            if (l1 == null || l2 == null)
+                throw new ArgumentException("Operands cannot be null");
+
+            return l1.Add(l2);
+        }
+
+
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
@@ -58,6 +96,10 @@ namespace QuantityMeasurementApp.Model
         public override int GetHashCode()
         {
             return ConvertToInch().GetHashCode();
+        }
+        public override string ToString()
+        {
+            return value + " " + unit;
         }
     }
 }
