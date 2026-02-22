@@ -51,5 +51,40 @@ namespace QuantityMeasurement.Tests
             QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Feet);
             Assert.IsTrue(q1.Equals(q1));
         }
+        [TestMethod]
+        public void TestEquality_YardToFeet_EquivalentValue()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Yard);
+            QuantityLength q2 = new QuantityLength(3.0, LengthUnit.Feet);
+
+            Assert.IsTrue(q1.Equals(q2));
+        }
+
+        [TestMethod]
+        public void TestEquality_YardToInch_EquivalentValue()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Yard);
+            QuantityLength q2 = new QuantityLength(36.0, LengthUnit.Inch);
+
+            Assert.IsTrue(q1.Equals(q2));
+        }
+
+        [TestMethod]
+        public void TestEquality_CentimeterToInch_EquivalentValue()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Centimeter);
+            QuantityLength q2 = new QuantityLength(0.393701, LengthUnit.Inch);
+
+            Assert.IsTrue(q1.Equals(q2));
+        }
+
+        [TestMethod]
+        public void TestEquality_YardToYard_DifferentValue()
+        {
+            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.Yard);
+            QuantityLength q2 = new QuantityLength(2.0, LengthUnit.Yard);
+
+            Assert.IsFalse(q1.Equals(q2));
+        }
     }
 }
