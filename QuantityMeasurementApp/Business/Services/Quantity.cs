@@ -11,6 +11,46 @@ namespace QuantityMeasurementApp.Business.Services
         public double Value => value;
         public U Unit => unit;
 
+        private enum ArithmeticOperation
+        {
+            ADD,
+            SUBTRACT,
+            DIVIDE
+        }
+        private void ValidateArithmeticOperands(Quantity<U> other, U? targetUnit, bool targetUnitRequired)
+        {
+            if (other == null)
+                throw new ArgumentException("Operand cannot be null");
+
+            if (targetUnitRequired && targetUnit == null)
+                throw new ArgumentException("Target unit cannot be null");
+
+            if (this.Unit.GetType() != other.Unit.GetType())
+                throw new ArgumentException("Quantities must belong to the same measurement category");
+
+            if (double.IsNaN(this.Value) || double.IsInfinity(this.Value) ||
+                double.IsNaN(other.Value) || double.IsInfinity(other.Value))
+                throw new ArgumentException("Values must be finite numbers");
+        }
+
+        private double PerformBaseArithmetic(Quantity<U> other, ArithmeticOperation operation)
+        {
+            dynamic u1 = unit;
+            dynamic u2 = other.unit;
+            double base1 = u1.ConvertToBaseUnit(Value);
+            double base2 = u2.ConvertToBaseUnit(other.Value);
+
+            return operation switch
+            {
+                ArithmeticOperation.ADD => base1 + base2,
+                ArithmeticOperation.SUBTRACT => base1 - base2,
+                ArithmeticOperation.DIVIDE => base2 == 0
+                    ? throw new ArithmeticException("Division by zero")
+                    : base1 / base2,
+                _ => throw new InvalidOperationException("Unsupported operation")
+            };
+        }
+
         public Quantity(double value, U unit)
         {
             if (double.IsNaN(value) || double.IsInfinity(value))
@@ -19,45 +59,20 @@ namespace QuantityMeasurementApp.Business.Services
             this.value = value;
             this.unit = unit;
         }
-        // Subtract method to perform subtraction between two quantities of the same unit type
         public Quantity<U> Subtract(Quantity<U> other)
         {
-            if (other == null)
-                throw new ArgumentException("Other quantity cannot be null");
-
-            if (unit.GetType() != other.unit.GetType())
-                throw new ArgumentException("Cross-category subtraction not allowed");
-
-            dynamic u1 = unit;
-            dynamic u2 = other.unit;
-
-            double base1 = u1.ConvertToBaseUnit(value);
-            double base2 = u2.ConvertToBaseUnit(other.value);
-
-            double result = base1 - base2;
-
-            double converted = u1.ConvertFromBaseUnit(result);
-
-            converted = Math.Round(converted, 2);
-
-            return new Quantity<U>(converted, unit);
+            return Subtract(other, unit);
         }
-        // Overloaded Subtract method to allow specifying a target unit for the result
+
         public Quantity<U> Subtract(Quantity<U> other, U targetUnit)
         {
-            if (other == null)
-                throw new ArgumentException("Other quantity cannot be null");
+            ValidateArithmeticOperands(other, targetUnit, true);
 
-            dynamic u1 = unit;
-            dynamic u2 = other.unit;
+            double baseResult = PerformBaseArithmetic(other, ArithmeticOperation.SUBTRACT);
+
             dynamic t = targetUnit;
 
-            double base1 = u1.ConvertToBaseUnit(value);
-            double base2 = u2.ConvertToBaseUnit(other.value);
-
-            double result = base1 - base2;
-
-            double converted = t.ConvertFromBaseUnit(result);
+            double converted = t.ConvertFromBaseUnit(baseResult);
 
             converted = Math.Round(converted, 2);
 
@@ -66,19 +81,9 @@ namespace QuantityMeasurementApp.Business.Services
         // Divide method to perform division between two quantities of the same unit type, returning a double result
         public double Divide(Quantity<U> other)
         {
-            if (other == null)
-                throw new ArgumentException("Other quantity cannot be null");
+            ValidateArithmeticOperands(other, default, false);
 
-            dynamic u1 = unit;
-            dynamic u2 = other.unit;
-
-            double base1 = u1.ConvertToBaseUnit(value);
-            double base2 = u2.ConvertToBaseUnit(other.value);
-
-            if (base2 == 0)
-                throw new ArithmeticException("Division by zero");
-
-            return base1 / base2;
+            return PerformBaseArithmetic(other, ArithmeticOperation.DIVIDE);
         }
 
         public override bool Equals(object? obj)
@@ -110,21 +115,22 @@ namespace QuantityMeasurementApp.Business.Services
             return new Quantity<U>(converted, targetUnit);
         }
 
+
+
         public Quantity<U> Add(Quantity<U> other)
         {
-            return Add(other, unit);
+            return Add(other, Unit);
         }
         public Quantity<U> Add(Quantity<U> other, U targetUnit)
         {
-            double base1 = ConvertToBase(this.value, this.unit);
-            double base2 = ConvertToBase(other.value, other.unit);
+            ValidateArithmeticOperands(other, targetUnit, true);
 
-            double sum = base1 + base2;
-
+            double baseResult = PerformBaseArithmetic(other, ArithmeticOperation.ADD);
             dynamic t = targetUnit;
-            double result = t.ConvertFromBaseUnit(sum);
 
-            return new Quantity<U>(result, targetUnit);
+            double converted = t.ConvertFromBaseUnit(baseResult);
+
+            return new Quantity<U>(Math.Round(converted, 2), targetUnit);
         }
 
         public override int GetHashCode()
