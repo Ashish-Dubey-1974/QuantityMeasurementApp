@@ -1,6 +1,7 @@
 using System;
-
-namespace QuantityMeasurementApp.Model
+using QuantityMeasurementApp.Model;
+using QuantityMeasurementApp.Business.Interfaces;
+namespace QuantityMeasurementApp.Business.Services
 {
     public class Quantity<U> where U : struct
     {
