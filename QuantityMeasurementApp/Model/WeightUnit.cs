@@ -15,30 +15,26 @@ namespace QuantityMeasurementApp.Model
         {
             switch (unit)
             {
-                case WeightUnit.KILOGRAM:
-                    return 1.0;
-
-                case WeightUnit.GRAM:
-                    return 0.001;
-
-                case WeightUnit.POUND:
-                    return 0.453592;
-
-                default:
-                    throw new ArgumentException("Invalid unit");
+                case WeightUnit.KILOGRAM: return 1.0;
+                case WeightUnit.GRAM: return 0.001;
+                case WeightUnit.POUND: return 0.453592;
+                default: throw new ArgumentException();
             }
         }
 
-        // Convert to base unit (Kilogram)
         public static double ConvertToBaseUnit(this WeightUnit unit, double value)
         {
             return value * unit.GetConversionFactor();
         }
 
-        // Convert from base unit (Kilogram)
         public static double ConvertFromBaseUnit(this WeightUnit unit, double baseValue)
         {
             return baseValue / unit.GetConversionFactor();
+        }
+
+        public static string GetUnitName(this WeightUnit unit)
+        {
+            return unit.ToString();
         }
     }
 }
