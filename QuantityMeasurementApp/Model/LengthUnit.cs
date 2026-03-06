@@ -1,64 +1,57 @@
-using System;
-
 namespace QuantityMeasurementApp.Model
 {
     public enum LengthUnit
     {
-        Feet = 1,               // Base Unit
-        Inch = 2,
-        Yard = 3,
-        Centimeter = 4
+        FEET,
+        INCHES,
+        YARDS,
+        CENTIMETERS
     }
 
     public static class LengthUnitExtensions
     {
-        private const double INCH_TO_FEET = 1.0 / 12.0;
-        private const double YARD_TO_FEET = 3.0;
-        private const double CM_TO_FEET = 1.0 / 30.48;
-
-        // ===============================
-        // Convert value in this unit → FEET (Base Unit)
-        // ===============================
+        // Convert a value in this unit to base unit (feet)
         public static double ConvertToBaseUnit(this LengthUnit unit, double value)
         {
-            return unit switch
+            switch (unit)
             {
-                LengthUnit.Feet => value,
-                LengthUnit.Inch => value * INCH_TO_FEET,
-                LengthUnit.Yard => value * YARD_TO_FEET,
-                LengthUnit.Centimeter => value * CM_TO_FEET,
-                _ => throw new ArgumentException("Invalid unit")
-            };
+                case LengthUnit.FEET:
+                    return value;
+
+                case LengthUnit.INCHES:
+                    return value / 12.0;
+
+                case LengthUnit.YARDS:
+                    return value * 3.0;
+
+                case LengthUnit.CENTIMETERS:
+                    return value / 30.48;
+
+                default:
+                    throw new ArgumentException("Invalid unit");
+            }
         }
 
-        // ===============================
-        // Convert FEET → This Unit
-        // ===============================
+        // Convert a base unit (feet) value to this unit
         public static double ConvertFromBaseUnit(this LengthUnit unit, double baseValue)
         {
-            return unit switch
+            switch (unit)
             {
-                LengthUnit.Feet => baseValue,
-                LengthUnit.Inch => baseValue / INCH_TO_FEET,
-                LengthUnit.Yard => baseValue / YARD_TO_FEET,
-                LengthUnit.Centimeter => baseValue / CM_TO_FEET,
-                _ => throw new ArgumentException("Invalid unit")
-            };
-        }
+                case LengthUnit.FEET:
+                    return baseValue;
 
-        // ===============================
-        // Optional: Get Conversion Factor (for testing)
-        // ===============================
-        public static double GetConversionFactor(this LengthUnit unit)
-        {
-            return unit switch
-            {
-                LengthUnit.Feet => 1.0,
-                LengthUnit.Inch => INCH_TO_FEET,
-                LengthUnit.Yard => YARD_TO_FEET,
-                LengthUnit.Centimeter => CM_TO_FEET,
-                _ => throw new ArgumentException("Invalid unit")
-            };
+                case LengthUnit.INCHES:
+                    return baseValue * 12.0;
+
+                case LengthUnit.YARDS:
+                    return baseValue / 3.0;
+
+                case LengthUnit.CENTIMETERS:
+                    return baseValue * 30.48;
+
+                default:
+                    throw new ArgumentException("Invalid unit");
+            }
         }
     }
 }
