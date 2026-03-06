@@ -8,6 +8,8 @@ namespace QuantityMeasurementApp.Business.Services
         private readonly double value;
         private readonly U unit;
         private const double EPSILON = 0.000001;
+        public double Value => value;
+        public U Unit => unit;
 
         public Quantity(double value, U unit)
         {
@@ -17,8 +19,69 @@ namespace QuantityMeasurementApp.Business.Services
             this.value = value;
             this.unit = unit;
         }
+        // Subtract method to perform subtraction between two quantities of the same unit type
+        public Quantity<U> Subtract(Quantity<U> other)
+        {
+            if (other == null)
+                throw new ArgumentException("Other quantity cannot be null");
 
-        public override bool Equals(object obj)
+            if (unit.GetType() != other.unit.GetType())
+                throw new ArgumentException("Cross-category subtraction not allowed");
+
+            dynamic u1 = unit;
+            dynamic u2 = other.unit;
+
+            double base1 = u1.ConvertToBaseUnit(value);
+            double base2 = u2.ConvertToBaseUnit(other.value);
+
+            double result = base1 - base2;
+
+            double converted = u1.ConvertFromBaseUnit(result);
+
+            converted = Math.Round(converted, 2);
+
+            return new Quantity<U>(converted, unit);
+        }
+        // Overloaded Subtract method to allow specifying a target unit for the result
+        public Quantity<U> Subtract(Quantity<U> other, U targetUnit)
+        {
+            if (other == null)
+                throw new ArgumentException("Other quantity cannot be null");
+
+            dynamic u1 = unit;
+            dynamic u2 = other.unit;
+            dynamic t = targetUnit;
+
+            double base1 = u1.ConvertToBaseUnit(value);
+            double base2 = u2.ConvertToBaseUnit(other.value);
+
+            double result = base1 - base2;
+
+            double converted = t.ConvertFromBaseUnit(result);
+
+            converted = Math.Round(converted, 2);
+
+            return new Quantity<U>(converted, targetUnit);
+        }
+        // Divide method to perform division between two quantities of the same unit type, returning a double result
+        public double Divide(Quantity<U> other)
+        {
+            if (other == null)
+                throw new ArgumentException("Other quantity cannot be null");
+
+            dynamic u1 = unit;
+            dynamic u2 = other.unit;
+
+            double base1 = u1.ConvertToBaseUnit(value);
+            double base2 = u2.ConvertToBaseUnit(other.value);
+
+            if (base2 == 0)
+                throw new ArithmeticException("Division by zero");
+
+            return base1 / base2;
+        }
+
+        public override bool Equals(object? obj)
         {
             if (obj == null || !(obj is Quantity<U>))
                 return false;
@@ -47,6 +110,10 @@ namespace QuantityMeasurementApp.Business.Services
             return new Quantity<U>(converted, targetUnit);
         }
 
+        public Quantity<U> Add(Quantity<U> other)
+        {
+            return Add(other, unit);
+        }
         public Quantity<U> Add(Quantity<U> other, U targetUnit)
         {
             double base1 = ConvertToBase(this.value, this.unit);
@@ -69,5 +136,6 @@ namespace QuantityMeasurementApp.Business.Services
         {
             return $"Quantity({value}, {unit})";
         }
+
     }
 }

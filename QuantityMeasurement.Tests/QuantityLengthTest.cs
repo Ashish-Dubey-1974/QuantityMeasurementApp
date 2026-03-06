@@ -1,395 +1,210 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using QuantityMeasurementApp.Business.Services;
 using QuantityMeasurementApp.Model;
 
-namespace QuantityMeasurement.Tests
+namespace QuantityMeasurementAppTests
 {
-    // Unit tests for the QuantityLength class
     [TestClass]
-    public class QuantityLengthTest
+    public class QuantityTests
     {
-        //Testing equality of two lengths in the same unit and same value should return true
-        [TestMethod]
-        public void TestEquality_FEETToFEET_SameValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
-            Assert.IsTrue(q1.Equals(q2));
-        }
 
-        //Testing equality of two lengths in the same unit but different values should return false
-        [TestMethod]
-        public void TestEquality_INCHESToINCHES_SameValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.INCHES);
-            QuantityLength q2 = new QuantityLength(1.0, LengthUnit.INCHES);
-            Assert.IsTrue(q1.Equals(q2));
-        }
-
-        //Testing equality of two lengths in different units but equivalent values should return true
-        [TestMethod]
-        public void TestEquality_FEETToINCHES_EquivalentValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-            Assert.IsTrue(q1.Equals(q2));
-        }
-
-        //Testing equality of two lengths in the same unit but different values should return false
-        [TestMethod]
-        public void TestEquality_DifferentValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(2.0, LengthUnit.FEET);
-            Assert.IsFalse(q1.Equals(q2));
-        }
-
-        //Testing equality of a QuantityLength object with null should return false
-        [TestMethod]
-        public void TestEquality_NullComparison()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            Assert.IsFalse(q1.Equals(null));
-        }
-
-        //Testing equality of the same reference should return true
-        [TestMethod]
-        public void TestEquality_SameReference()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            Assert.IsTrue(q1.Equals(q1));
-        }
-
-        //Testing equality of two lengths in different units but equivalent values should return true
-        [TestMethod]
-        public void TestEquality_YARDSToFEET_EquivalentValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARDS);
-            QuantityLength q2 = new QuantityLength(3.0, LengthUnit.FEET);
-
-            Assert.IsTrue(q1.Equals(q2));
-        }
-
-        //Testing equality of two lengths in different units but equivalent values should return true
-        [TestMethod]
-        public void TestEquality_YARDSToINCHES_EquivalentValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARDS);
-            QuantityLength q2 = new QuantityLength(36.0, LengthUnit.INCHES);
-
-            Assert.IsTrue(q1.Equals(q2));
-        }
-
-        //Testing equality of two lengths in different units but equivalent values should return true
-        [TestMethod]
-        public void TestEquality_CENTIMETERSToINCHES_EquivalentValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.CENTIMETERS);
-            QuantityLength q2 = new QuantityLength(0.393701, LengthUnit.INCHES);
-
-            Assert.IsTrue(q1.Equals(q2));
-        }
-
-        //Testing equality of two lengths in the same unit but different values should return false
-        [TestMethod]
-        public void TestEquality_YARDSToYARDS_DifferentValue()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARDS);
-            QuantityLength q2 = new QuantityLength(2.0, LengthUnit.YARDS);
-
-            Assert.IsFalse(q1.Equals(q2));
-        }
-
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_RoundTrip()
-        {
-            double original = 5.0;
-
-            double toYARDS = QuantityLength.Convert(original, LengthUnit.FEET, LengthUnit.YARDS);
-            double backToFEET = QuantityLength.Convert(toYARDS, LengthUnit.YARDS, LengthUnit.FEET);
-
-            Assert.AreEqual(original, backToFEET, 0.000001);
-        }
-
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_NegativeValue()
-        {
-            double result = QuantityLength.Convert(-1.0, LengthUnit.FEET, LengthUnit.INCHES);
-            Assert.AreEqual(-12.0, result, 0.000001);
-        }
-
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_ZeroValue()
-        {
-            double result = QuantityLength.Convert(0.0, LengthUnit.FEET, LengthUnit.INCHES);
-            Assert.AreEqual(0.0, result, 0.000001);
-        }
-
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_CENTIMETERSToINCHES()
-        {
-            double result = QuantityLength.Convert(2.54, LengthUnit.CENTIMETERS, LengthUnit.INCHES);
-            Assert.AreEqual(1.0, result, 0.0001);
-        }
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_YARDSsToFEET()
-        {
-            double result = QuantityLength.Convert(3.0, LengthUnit.YARDS, LengthUnit.FEET);
-            Assert.AreEqual(9.0, result, 0.000001);
-        }
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_INCHESesToFEET()
-        {
-            double result = QuantityLength.Convert(24.0, LengthUnit.INCHES, LengthUnit.FEET);
-            Assert.AreEqual(2.0, result, 0.000001);
-        }
-        //Testing conversion of a value from one unit to the same unit should return the original value
-        [TestMethod]
-        public void TestConversion_FEETToINCHESes()
-        {
-            double result = QuantityLength.Convert(1.0, LengthUnit.FEET, LengthUnit.INCHES);
-            Assert.AreEqual(12.0, result, 0.000001);
-        }
-
-        //Testing addition of two lengths where one operand is null
-        [TestMethod]
-        public void TestAddition_NullSecondOperand()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            try
-            {
-                q1.Add(null);
-                Assert.Fail("Expected ArgumentException was not thrown.");
-            }
-            catch (ArgumentException)
-            {
-                // Test passes
-            }
-        }
-
-        //Testing addition of two lengths where one has a negative value
-        [TestMethod]
-        public void TestAddition_NegativeValue()
-        {
-            QuantityLength q1 = new QuantityLength(5.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(-2.0, LengthUnit.FEET);
-
-            QuantityLength result = q1.Add(q2);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(3.0, LengthUnit.FEET)));
-        }
-        //Testing addition of zero to a length
-        [TestMethod]
-        public void TestAddition_WithZero()
-        {
-            QuantityLength q1 = new QuantityLength(5.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(0.0, LengthUnit.INCHES);
-
-            QuantityLength result = q1.Add(q2);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(5.0, LengthUnit.FEET)));
-        }
-        //Testing addition of two lengths in different units
-        [TestMethod]
-        public void TestAddition_CrossUnit_INCHESPlusFEET()
-        {
-            QuantityLength q1 = new QuantityLength(12.0, LengthUnit.INCHES);
-            QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
-
-            QuantityLength result = q1.Add(q2);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(24.0, LengthUnit.INCHES)));
-        }
-        //Testing addition of two lengths in different units
-        [TestMethod]
-        public void TestAddition_CrossUnit_FEETPlusINCHES()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-            QuantityLength result = q1.Add(q2);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(2.0, LengthUnit.FEET)));
-        }
-        //Testing addition of two lengths in the same unit
-        [TestMethod]
-        public void TestAddition_SameUnit_FEETPlusFEET()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(2.0, LengthUnit.FEET);
-
-            QuantityLength result = q1.Add(q2);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(3.0, LengthUnit.FEET)));
-        }
-        //Testing addition of two lengths in the same unit
-        [TestMethod]
-        public void TestAddition_ExplicitTargetUnit_FEET()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-            QuantityLength result =
-                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.FEET);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(2.0, LengthUnit.FEET)));
-        }
-        //Testing addition of two lengths with an invalid target unit should throw an exception
-        [TestMethod]
-        public void TestAddition_ExplicitTargetUnit_INCHESes()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-            QuantityLength result =
-                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.INCHES);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(24.0, LengthUnit.INCHES)));
-        }
-        //Testing addition of two lengths with an invalid target unit should throw an exception
-        [TestMethod]
-        public void TestAddition_ExplicitTargetUnit_YARDSs()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-            QuantityLength result =
-                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.YARDS);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(0.666666, LengthUnit.YARDS)));
-        }
-        //Testing addition of two lengths with an invalid target unit should throw an exception
-        [TestMethod]
-        public void TestAddition_ExplicitTargetUnit_CENTIMETERS()
-        {
-            QuantityLength q1 = new QuantityLength(2.54, LengthUnit.CENTIMETERS);
-            QuantityLength q2 = new QuantityLength(1.0, LengthUnit.INCHES);
-
-            QuantityLength result =
-                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.CENTIMETERS);
-
-            Assert.IsTrue(result.Equals(new QuantityLength(5.08, LengthUnit.CENTIMETERS)));
-        }
-        //Testing addition of two lengths with an invalid target unit should throw an exception
-        [TestMethod]
-        public void TestAddition_ExplicitTargetUnit_Commutativity()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-            QuantityLength r1 =
-                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, LengthUnit.YARDS);
-
-            QuantityLength r2 =
-                QuantityLength.AddTwoUnits_TargetUnit(q2, q1, LengthUnit.YARDS);
-
-            Assert.IsTrue(r1.Equals(r2));
-        }
-        //Testing addition of two lengths with an invalid target unit should throw an exception
-        [TestMethod]
-        public void TestAddition_ExplicitTargetUnit_InvalidTarget()
-        {
-            QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-            QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-            try
-            {
-                QuantityLength.AddTwoUnits_TargetUnit(q1, q2, (LengthUnit)999);
-                Assert.Fail("Expected ArgumentException not thrown");
-            }
-            catch (ArgumentException)
-            {
-                // pass
-            }
-        }
-
-
-        // ====================================================================================
-        //Testing for WeightUnit and QuantityWeight classes
+        // -------------------------
+        // LENGTH EQUALITY
+        // -------------------------
 
         [TestMethod]
-        public void testEquality_KilogramToKilogram_SameValue()
+        public void Test_LengthEquality_FeetToInches()
         {
-            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
-            QuantityWeight q2 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            var q1 = new Quantity<LengthUnit>(1.0, LengthUnit.FEET);
+            var q2 = new Quantity<LengthUnit>(12.0, LengthUnit.INCHES);
 
             Assert.IsTrue(q1.Equals(q2));
         }
 
         [TestMethod]
-        public void testEquality_KilogramToGram_EquivalentValue()
+        public void Test_LengthEquality_InchesToFeet()
         {
-            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
-            QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+            var q1 = new Quantity<LengthUnit>(24.0, LengthUnit.INCHES);
+            var q2 = new Quantity<LengthUnit>(2.0, LengthUnit.FEET);
 
             Assert.IsTrue(q1.Equals(q2));
         }
 
+
+        // -------------------------
+        // LENGTH CONVERSION
+        // -------------------------
+
         [TestMethod]
-        public void testEquality_GramToKilogram_EquivalentValue()
+        public void Test_LengthConversion_FeetToInches()
         {
-            QuantityWeight q1 = new QuantityWeight(1000.0, WeightUnit.GRAM);
-            QuantityWeight q2 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            var q = new Quantity<LengthUnit>(1.0, LengthUnit.FEET);
 
-            Assert.IsTrue(q1.Equals(q2));
-        }
-        [TestMethod]
-        public void testConversion_KilogramToGram()
-        {
-            QuantityWeight q = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            var result = q.ConvertTo(LengthUnit.INCHES);
 
-            QuantityWeight result = q.ConvertTo(WeightUnit.GRAM);
-
-            Assert.IsTrue(result.Equals(new QuantityWeight(1000.0, WeightUnit.GRAM)));
+            Assert.AreEqual(12.0, result.Value);
         }
 
         [TestMethod]
-        public void testConversion_PoundToKilogram()
+        public void Test_LengthConversion_YardToFeet()
         {
-            QuantityWeight q = new QuantityWeight(2.20462, WeightUnit.POUND);
+            var q = new Quantity<LengthUnit>(1.0, LengthUnit.YARDS);
 
-            QuantityWeight result = q.ConvertTo(WeightUnit.KILOGRAM);
+            var result = q.ConvertTo(LengthUnit.FEET);
 
-            Assert.IsTrue(result.Equals(new QuantityWeight(1.0, WeightUnit.KILOGRAM)));
-        }
-        [TestMethod]
-        public void testAddition_SameUnit_KilogramPlusKilogram()
-        {
-            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
-            QuantityWeight q2 = new QuantityWeight(2.0, WeightUnit.KILOGRAM);
-
-            QuantityWeight result = q1.Add(q2);
-
-            Assert.IsTrue(result.Equals(new QuantityWeight(3.0, WeightUnit.KILOGRAM)));
+            Assert.AreEqual(3.0, result.Value);
         }
 
+
+        // -------------------------
+        // LENGTH ADDITION
+        // -------------------------
+
         [TestMethod]
-        public void testAddition_CrossUnit_KilogramPlusGram()
+        public void Test_LengthAddition_FeetPlusInches()
         {
-            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
-            QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+            var q1 = new Quantity<LengthUnit>(1.0, LengthUnit.FEET);
+            var q2 = new Quantity<LengthUnit>(12.0, LengthUnit.INCHES);
 
-            QuantityWeight result = q1.Add(q2);
+            var result = q1.Add(q2);
 
-            Assert.IsTrue(result.Equals(new QuantityWeight(2.0, WeightUnit.KILOGRAM)));
+            Assert.AreEqual(2.0, result.Value);
         }
 
         [TestMethod]
-        public void testAddition_ExplicitTargetUnit_Kilogram()
+        public void Test_LengthAddition_TargetUnit_Inches()
         {
-            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
-            QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+            var q1 = new Quantity<LengthUnit>(1.0, LengthUnit.FEET);
+            var q2 = new Quantity<LengthUnit>(12.0, LengthUnit.INCHES);
 
-            QuantityWeight result = q1.Add(q2, WeightUnit.GRAM);
+            var result = q1.Add(q2, LengthUnit.INCHES);
 
-            Assert.IsTrue(result.Equals(new QuantityWeight(2000.0, WeightUnit.GRAM)));
+            Assert.AreEqual(24.0, result.Value);
         }
 
+
+        // -------------------------
+        // WEIGHT TESTS
+        // -------------------------
+
+        [TestMethod]
+        public void Test_WeightEquality_KgToGram()
+        {
+            var w1 = new Quantity<WeightUnit>(1.0, WeightUnit.KILOGRAM);
+            var w2 = new Quantity<WeightUnit>(1000.0, WeightUnit.GRAM);
+
+            Assert.IsTrue(w1.Equals(w2));
+        }
+
+        [TestMethod]
+        public void Test_WeightConversion_KgToGram()
+        {
+            var w = new Quantity<WeightUnit>(1.0, WeightUnit.KILOGRAM);
+
+            var result = w.ConvertTo(WeightUnit.GRAM);
+
+            Assert.AreEqual(1000.0, result.Value);
+        }
+
+        [TestMethod]
+        public void Test_WeightAddition_KgPlusGram()
+        {
+            var w1 = new Quantity<WeightUnit>(1.0, WeightUnit.KILOGRAM);
+            var w2 = new Quantity<WeightUnit>(1000.0, WeightUnit.GRAM);
+
+            var result = w1.Add(w2);
+
+            Assert.AreEqual(2.0, result.Value);
+        }
+
+
+        // -------------------------
+        // VOLUME TESTS
+        // -------------------------
+
+        [TestMethod]
+        public void Test_VolumeEquality_LitreToMillilitre()
+        {
+            var v1 = new Quantity<VolumeUnit>(1.0, VolumeUnit.LITRE);
+            var v2 = new Quantity<VolumeUnit>(1000.0, VolumeUnit.MILLILITRE);
+
+            Assert.IsTrue(v1.Equals(v2));
+        }
+
+        [TestMethod]
+        public void Test_VolumeConversion_LitreToMillilitre()
+        {
+            var v = new Quantity<VolumeUnit>(1.0, VolumeUnit.LITRE);
+
+            var result = v.ConvertTo(VolumeUnit.MILLILITRE);
+
+            Assert.AreEqual(1000.0, result.Value);
+        }
+
+        [TestMethod]
+        public void Test_VolumeAddition_LitrePlusML()
+        {
+            var v1 = new Quantity<VolumeUnit>(1.0, VolumeUnit.LITRE);
+            var v2 = new Quantity<VolumeUnit>(1000.0, VolumeUnit.MILLILITRE);
+
+            var result = v1.Add(v2);
+
+            Assert.AreEqual(2.0, result.Value);
+        }
+
+
+        // -------------------------
+        // SUBTRACTION TESTS (UC12)
+        // -------------------------
+
+        [TestMethod]
+        public void Test_Subtraction_FeetMinusInches()
+        {
+            var q1 = new Quantity<LengthUnit>(10.0, LengthUnit.FEET);
+            var q2 = new Quantity<LengthUnit>(6.0, LengthUnit.INCHES);
+
+            var result = q1.Subtract(q2);
+
+            Assert.AreEqual(9.5, result.Value);
+        }
+
+        [TestMethod]
+        public void Test_Subtraction_ResultZero()
+        {
+            var q1 = new Quantity<LengthUnit>(10.0, LengthUnit.FEET);
+            var q2 = new Quantity<LengthUnit>(120.0, LengthUnit.INCHES);
+
+            var result = q1.Subtract(q2);
+
+            Assert.AreEqual(0.0, result.Value);
+        }
+
+
+        // -------------------------
+        // DIVISION TESTS (UC12)
+        // -------------------------
+
+        [TestMethod]
+        public void Test_Division_SameUnit()
+        {
+            var q1 = new Quantity<LengthUnit>(10.0, LengthUnit.FEET);
+            var q2 = new Quantity<LengthUnit>(2.0, LengthUnit.FEET);
+
+            var result = q1.Divide(q2);
+
+            Assert.AreEqual(5.0, result);
+        }
+
+        [TestMethod]
+        public void Test_Division_CrossUnit()
+        {
+            var q1 = new Quantity<LengthUnit>(24.0, LengthUnit.INCHES);
+            var q2 = new Quantity<LengthUnit>(2.0, LengthUnit.FEET);
+
+            var result = q1.Divide(q2);
+
+            Assert.AreEqual(1.0, result);
+        }
 
     }
 }
