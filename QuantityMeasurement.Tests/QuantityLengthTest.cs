@@ -309,6 +309,87 @@ namespace QuantityMeasurement.Tests
         }
 
 
+        // ====================================================================================
+        //Testing for WeightUnit and QuantityWeight classes
+
+        [TestMethod]
+        public void testEquality_KilogramToKilogram_SameValue()
+        {
+            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            QuantityWeight q2 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+
+            Assert.IsTrue(q1.Equals(q2));
+        }
+
+        [TestMethod]
+        public void testEquality_KilogramToGram_EquivalentValue()
+        {
+            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+
+            Assert.IsTrue(q1.Equals(q2));
+        }
+
+        [TestMethod]
+        public void testEquality_GramToKilogram_EquivalentValue()
+        {
+            QuantityWeight q1 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+            QuantityWeight q2 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+
+            Assert.IsTrue(q1.Equals(q2));
+        }
+        [TestMethod]
+        public void testConversion_KilogramToGram()
+        {
+            QuantityWeight q = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+
+            QuantityWeight result = q.ConvertTo(WeightUnit.GRAM);
+
+            Assert.IsTrue(result.Equals(new QuantityWeight(1000.0, WeightUnit.GRAM)));
+        }
+
+        [TestMethod]
+        public void testConversion_PoundToKilogram()
+        {
+            QuantityWeight q = new QuantityWeight(2.20462, WeightUnit.POUND);
+
+            QuantityWeight result = q.ConvertTo(WeightUnit.KILOGRAM);
+
+            Assert.IsTrue(result.Equals(new QuantityWeight(1.0, WeightUnit.KILOGRAM)));
+        }
+        [TestMethod]
+        public void testAddition_SameUnit_KilogramPlusKilogram()
+        {
+            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            QuantityWeight q2 = new QuantityWeight(2.0, WeightUnit.KILOGRAM);
+
+            QuantityWeight result = q1.Add(q2);
+
+            Assert.IsTrue(result.Equals(new QuantityWeight(3.0, WeightUnit.KILOGRAM)));
+        }
+
+        [TestMethod]
+        public void testAddition_CrossUnit_KilogramPlusGram()
+        {
+            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+
+            QuantityWeight result = q1.Add(q2);
+
+            Assert.IsTrue(result.Equals(new QuantityWeight(2.0, WeightUnit.KILOGRAM)));
+        }
+
+        [TestMethod]
+        public void testAddition_ExplicitTargetUnit_Kilogram()
+        {
+            QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+            QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
+
+            QuantityWeight result = q1.Add(q2, WeightUnit.GRAM);
+
+            Assert.IsTrue(result.Equals(new QuantityWeight(2000.0, WeightUnit.GRAM)));
+        }
+
 
     }
 }
