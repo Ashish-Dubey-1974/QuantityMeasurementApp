@@ -35,10 +35,15 @@ namespace QuantityMeasurementApp.Business.Services
 
         private double PerformBaseArithmetic(Quantity<U> other, ArithmeticOperation operation)
         {
+            dynamic u = unit;
+
+            u.ValidateOperationSupport(operation.ToString());
+
             dynamic u1 = unit;
             dynamic u2 = other.unit;
-            double base1 = u1.ConvertToBaseUnit(Value);
-            double base2 = u2.ConvertToBaseUnit(other.Value);
+
+            double base1 = u1.ConvertToBaseUnit(value);
+            double base2 = u2.ConvertToBaseUnit(other.value);
 
             return operation switch
             {
@@ -47,9 +52,27 @@ namespace QuantityMeasurementApp.Business.Services
                 ArithmeticOperation.DIVIDE => base2 == 0
                     ? throw new ArithmeticException("Division by zero")
                     : base1 / base2,
-                _ => throw new InvalidOperationException("Unsupported operation")
+                _ => throw new InvalidOperationException()
             };
         }
+
+        // private double PerformBaseArithmetic(Quantity<U> other, ArithmeticOperation operation)
+        // {
+        //     dynamic u1 = unit;
+        //     dynamic u2 = other.unit;
+        //     double base1 = u1.ConvertToBaseUnit(Value);
+        //     double base2 = u2.ConvertToBaseUnit(other.Value);
+
+        //     return operation switch
+        //     {
+        //         ArithmeticOperation.ADD => base1 + base2,
+        //         ArithmeticOperation.SUBTRACT => base1 - base2,
+        //         ArithmeticOperation.DIVIDE => base2 == 0
+        //             ? throw new ArithmeticException("Division by zero")
+        //             : base1 / base2,
+        //         _ => throw new InvalidOperationException("Unsupported operation")
+        //     };
+        // }
 
         public Quantity(double value, U unit)
         {
@@ -67,15 +90,10 @@ namespace QuantityMeasurementApp.Business.Services
         public Quantity<U> Subtract(Quantity<U> other, U targetUnit)
         {
             ValidateArithmeticOperands(other, targetUnit, true);
-
             double baseResult = PerformBaseArithmetic(other, ArithmeticOperation.SUBTRACT);
-
             dynamic t = targetUnit;
-
             double converted = t.ConvertFromBaseUnit(baseResult);
-
             converted = Math.Round(converted, 2);
-
             return new Quantity<U>(converted, targetUnit);
         }
         // Divide method to perform division between two quantities of the same unit type, returning a double result

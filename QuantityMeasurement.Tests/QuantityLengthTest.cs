@@ -206,5 +206,91 @@ namespace QuantityMeasurementAppTests
             Assert.AreEqual(1.0, result);
         }
 
+        [TestMethod]
+        public void Test_TemperatureEquality_CelsiusToFahrenheit()
+        {
+            var t1 = new Quantity<TemperatureUnit>(0.0, TemperatureUnit.CELSIUS);
+            var t2 = new Quantity<TemperatureUnit>(32.0, TemperatureUnit.FAHRENHEIT);
+
+            Assert.IsTrue(t1.Equals(t2));
+        }
+        [TestMethod]
+        public void Test_TemperatureEquality_KelvinToCelsius()
+        {
+            var t1 = new Quantity<TemperatureUnit>(273.15, TemperatureUnit.KELVIN);
+            var t2 = new Quantity<TemperatureUnit>(0.0, TemperatureUnit.CELSIUS);
+
+            Assert.IsTrue(t1.Equals(t2));
+        }
+        [TestMethod]
+        public void Test_TemperatureConversion_CelsiusToFahrenheit()
+        {
+            var t = new Quantity<TemperatureUnit>(100.0, TemperatureUnit.CELSIUS);
+
+            var result = t.ConvertTo(TemperatureUnit.FAHRENHEIT);
+
+            Assert.AreEqual(212.0, result.Value, 0.01);
+        }
+        [TestMethod]
+        public void Test_TemperatureConversion_FahrenheitToCelsius()
+        {
+            var t = new Quantity<TemperatureUnit>(32.0, TemperatureUnit.FAHRENHEIT);
+
+            var result = t.ConvertTo(TemperatureUnit.CELSIUS);
+
+            Assert.AreEqual(0.0, result.Value, 0.01);
+        }
+        [TestMethod]
+        public void Test_TemperatureUnsupported_Add()
+        {
+            try
+            {
+                var t1 = new Quantity<TemperatureUnit>(100.0, TemperatureUnit.CELSIUS);
+                var t2 = new Quantity<TemperatureUnit>(50.0, TemperatureUnit.CELSIUS);
+
+                t1.Add(t2);
+
+                Assert.Fail("Expected NotSupportedException was not thrown.");
+            }
+            catch (NotSupportedException)
+            {
+                Assert.IsTrue(true);
+            }
+        }
+        [TestMethod]
+        public void Test_TemperatureUnsupported_Subtract()
+        {
+            try
+            {
+                var t1 = new Quantity<TemperatureUnit>(100.0, TemperatureUnit.CELSIUS);
+                var t2 = new Quantity<TemperatureUnit>(50.0, TemperatureUnit.CELSIUS);
+
+                t1.Subtract(t2);
+
+                Assert.Fail("Expected NotSupportedException was not thrown.");
+            }
+            catch (NotSupportedException)
+            {
+                Assert.IsTrue(true);
+            }
+        }
+        [TestMethod]
+        public void Test_TemperatureUnsupported_Divide()
+        {
+            try
+            {
+                var t1 = new Quantity<TemperatureUnit>(100.0, TemperatureUnit.CELSIUS);
+                var t2 = new Quantity<TemperatureUnit>(50.0, TemperatureUnit.CELSIUS);
+
+                t1.Divide(t2);
+
+                Assert.Fail("Expected NotSupportedException was not thrown.");
+            }
+            catch (NotSupportedException)
+            {
+                Assert.IsTrue(true);
+            }
+        }
+
     }
 }

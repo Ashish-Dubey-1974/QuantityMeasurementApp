@@ -9,5 +9,12 @@ namespace QuantityMeasurementApp.Business.Interfaces
         double ConvertToBaseUnit(double value);
         double ConvertFromBaseUnit(double baseValue);
         string GetUnitName();
+        bool SupportsArithmetic() => true;
+        void ValidateOperationSupport(string operation)
+        {
+            if (!SupportsArithmetic())
+                throw new NotSupportedException(
+                    $"Operation '{operation}' not supported for this unit.");
+        }
     }
 }
