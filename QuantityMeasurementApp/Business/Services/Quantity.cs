@@ -56,24 +56,6 @@ namespace QuantityMeasurementApp.Business.Services
             };
         }
 
-        // private double PerformBaseArithmetic(Quantity<U> other, ArithmeticOperation operation)
-        // {
-        //     dynamic u1 = unit;
-        //     dynamic u2 = other.unit;
-        //     double base1 = u1.ConvertToBaseUnit(Value);
-        //     double base2 = u2.ConvertToBaseUnit(other.Value);
-
-        //     return operation switch
-        //     {
-        //         ArithmeticOperation.ADD => base1 + base2,
-        //         ArithmeticOperation.SUBTRACT => base1 - base2,
-        //         ArithmeticOperation.DIVIDE => base2 == 0
-        //             ? throw new ArithmeticException("Division by zero")
-        //             : base1 / base2,
-        //         _ => throw new InvalidOperationException("Unsupported operation")
-        //     };
-        // }
-
         public Quantity(double value, U unit)
         {
             if (double.IsNaN(value) || double.IsInfinity(value))
