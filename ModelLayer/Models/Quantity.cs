@@ -1,19 +1,25 @@
 using System;
 using ModelLayer.Enums;
+using ModelLayer.Helpers;
 
 namespace ModelLayer.Models
 {
     /// <summary>
-    /// Generic measurement container used for different unit groups
-    /// like length, weight, volume and temperature.
-    /// Internally calculations are done using the base unit.
+    /// Generic, immutable measurement container for different unit categories
+    /// (Length, Weight, Volume, Temperature).
+    ///
+    /// UC15 refactoring: all conversion calls previously delegated to static
+    /// extension classes on the enums are now routed through UnitConverter,
+    /// keeping each enum a pure data definition with no embedded behaviour.
+    ///
+    /// Public API is unchanged — all existing test cases continue to pass.
     /// </summary>
     public sealed class Quantity<TUnit> where TUnit : struct, Enum
     {
         private const double PrecisionLimit = 1e-6;
 
         public double Value { get; }
-        public TUnit Unit { get; }
+        public TUnit Unit  { get; }
 
         public Quantity(double amount, TUnit unitType)
         {
@@ -21,95 +27,51 @@ namespace ModelLayer.Models
                 throw new ArgumentException("Numeric value is not valid.");
 
             Value = amount;
-            Unit = unitType;
+            Unit  = unitType;
         }
 
-        private enum OperationType
-        {
-            Add,
-            Subtract,
-            Divide
-        }
+        // ── Arithmetic core ───────────────────────────────────────────────────
 
-        private double ExecuteBaseOperation(Quantity<TUnit> otherQuantity, OperationType op)
-        {
-            if (otherQuantity == null)
-                throw new ArgumentNullException(nameof(otherQuantity));
+        private enum OperationType { Add, Subtract, Divide }
 
-            if (!Unit.GetType().Equals(otherQuantity.Unit.GetType()))
+        private double ExecuteBaseOperation(Quantity<TUnit> other, OperationType op)
+        {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
+            if (!Unit.GetType().Equals(other.Unit.GetType()))
                 throw new ArgumentException("Measurement types are not compatible.");
 
             if (typeof(TUnit) == typeof(TemperatureUnit) && op == OperationType.Divide)
-                throw new InvalidOperationException($"Temperature does not support {op.ToString().ToLower()} operations.");
+                throw new InvalidOperationException("Temperature does not support divide operations.");
 
-            double baseA = ConvertCurrentToBase();
-            double baseB = otherQuantity.ConvertCurrentToBase();
+            double baseA = UnitConverter.ToBase(Unit,       Value);
+            double baseB = UnitConverter.ToBase(other.Unit, other.Value);
 
-            switch (op)
+            return op switch
             {
-                case OperationType.Add:
-                    return baseA + baseB;
-
-                case OperationType.Subtract:
-                    return baseA - baseB;
-
-                case OperationType.Divide:
-                    if (Math.Abs(baseB) < PrecisionLimit)
-                        throw new ArithmeticException("Cannot divide by zero.");
-                    return baseA / baseB;
-
-                default:
-                    throw new InvalidOperationException();
-            }
+                OperationType.Add      => baseA + baseB,
+                OperationType.Subtract => baseA - baseB,
+                OperationType.Divide when Math.Abs(baseB) < PrecisionLimit
+                                       => throw new ArithmeticException("Cannot divide by zero."),
+                OperationType.Divide   => baseA / baseB,
+                _                      => throw new InvalidOperationException()
+            };
         }
 
-        private double ConvertCurrentToBase()
+        // ── Conversion ────────────────────────────────────────────────────────
+
+        /// <summary>Returns a new Quantity converted to <paramref name="destination"/>.</summary>
+        public Quantity<TUnit> ConvertTo(TUnit destination)
         {
-            if (Unit is LengthUnit l) return l.ConvertToBase(Value);
-            if (Unit is WeightUnit w) return w.ConvertToBase(Value);
-            if (Unit is VolumeUnit v) return v.ConvertToBase(Value);
-            if (Unit is TemperatureUnit t) return t.ConvertToBase(Value);
-
-            throw new InvalidOperationException("Unsupported unit category.");
+            double baseVal   = UnitConverter.ToBase(Unit, Value);
+            double converted = UnitConverter.FromBase(destination, baseVal);
+            return new Quantity<TUnit>(converted, destination);
         }
 
-        public Quantity<TUnit> ConvertTo(TUnit destinationUnit)
-        {
-            double baseVal = ConvertCurrentToBase();
-            double newValue = 0;
+        // ── Addition ──────────────────────────────────────────────────────────
 
-            if (destinationUnit is LengthUnit l)
-                newValue = LengthUnitExtensions.ConvertFromBase(l, baseVal);
-            else if (destinationUnit is WeightUnit w)
-                newValue = WeightUnitExtension.ConvertFromBase(w, baseVal);
-            else if (destinationUnit is VolumeUnit v)
-                newValue = VolumeUnitExtension.ConvertFromBase(v, baseVal);
-            else if (destinationUnit is TemperatureUnit t)
-                newValue = TemperatureUnitExtension.ConvertFromBase(t, baseVal);
-
-            return new Quantity<TUnit>(newValue, destinationUnit);
-        }
-
-        public Quantity<TUnit> Subtract(Quantity<TUnit> other)
-        {
-            return Subtract(other, Unit);
-        }
-
-        public Quantity<TUnit> Subtract(Quantity<TUnit> other, TUnit? targetUnit = null)
-        {
-            double baseResult = ExecuteBaseOperation(other, OperationType.Subtract);
-            return CreateFromBase(Math.Round(baseResult, 2), targetUnit ?? Unit);
-        }
-
-        public double Divide(Quantity<TUnit> other)
-        {
-            return ExecuteBaseOperation(other, OperationType.Divide);
-        }
-
-        public Quantity<TUnit> Add(Quantity<TUnit> other)
-        {
-            return Add(other, Unit);
-        }
+        public Quantity<TUnit> Add(Quantity<TUnit> other) => Add(other, Unit);
 
         public Quantity<TUnit> Add(Quantity<TUnit> other, TUnit? resultUnit = null)
         {
@@ -117,45 +79,43 @@ namespace ModelLayer.Models
             return CreateFromBase(baseResult, resultUnit ?? Unit);
         }
 
+        // ── Subtraction ───────────────────────────────────────────────────────
+
+        public Quantity<TUnit> Subtract(Quantity<TUnit> other) => Subtract(other, Unit);
+
+        public Quantity<TUnit> Subtract(Quantity<TUnit> other, TUnit? targetUnit = null)
+        {
+            double baseResult = ExecuteBaseOperation(other, OperationType.Subtract);
+            return CreateFromBase(Math.Round(baseResult, 2), targetUnit ?? Unit);
+        }
+
+        // ── Division ──────────────────────────────────────────────────────────
+
+        /// <summary>Divides this quantity by <paramref name="other"/> and returns the ratio.</summary>
+        public double Divide(Quantity<TUnit> other)
+            => ExecuteBaseOperation(other, OperationType.Divide);
+
+        // ── Private helpers ───────────────────────────────────────────────────
+
         private Quantity<TUnit> CreateFromBase(double baseValue, TUnit destination)
         {
-            double convertedVal = 0;
-
-            if (destination is LengthUnit l)
-                convertedVal = l.ConvertFromBase(baseValue);
-            else if (destination is WeightUnit w)
-                convertedVal = WeightUnitExtension.ConvertFromBase(w, baseValue);
-            else if (destination is VolumeUnit v)
-                convertedVal = VolumeUnitExtension.ConvertFromBase(v, baseValue);
-            else if (destination is TemperatureUnit t)
-                convertedVal = TemperatureUnitExtension.ConvertFromBase(t, baseValue);
-
-            return new Quantity<TUnit>(convertedVal, destination);
+            double converted = UnitConverter.FromBase(destination, baseValue);
+            return new Quantity<TUnit>(converted, destination);
         }
+
+        // ── Equality ──────────────────────────────────────────────────────────
 
         public override bool Equals(object? obj)
         {
-            if (obj is not Quantity<TUnit> otherQuantity)
-                return false;
-
-            return Math.Abs(ConvertCurrentToBase() - otherQuantity.ConvertCurrentToBase()) < PrecisionLimit;
+            if (obj is not Quantity<TUnit> other) return false;
+            return Math.Abs(UnitConverter.ToBase(Unit,       Value)
+                           - UnitConverter.ToBase(other.Unit, other.Value)) < PrecisionLimit;
         }
 
         public override int GetHashCode()
-        {
-            return ConvertCurrentToBase().GetHashCode();
-        }
+            => UnitConverter.ToBase(Unit, Value).GetHashCode();
 
         public override string ToString()
-        {
-            string symbol = "";
-
-            if (Unit is LengthUnit l) symbol = l.GetSymbol();
-            else if (Unit is WeightUnit w) symbol = w.GetSymbol();
-            else if (Unit is VolumeUnit v) symbol = v.GetSymbol();
-            else if (Unit is TemperatureUnit t) symbol = t.GetSymbol();
-
-            return $"{Value} {symbol}";
-        }
+            => $"{Value} {UnitConverter.GetSymbol(Unit)}";
     }
 }

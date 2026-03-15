@@ -1,7 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\ControllerLayer\ControllerLayer.csproj" />
     <ProjectReference Include="..\BusinessLayer\BusinessLayer.csproj" />
+    <ProjectReference Include="..\RepoLayer\RepoLayer.csproj" />
+    <ProjectReference Include="..\ModelLayer\ModelLayer.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

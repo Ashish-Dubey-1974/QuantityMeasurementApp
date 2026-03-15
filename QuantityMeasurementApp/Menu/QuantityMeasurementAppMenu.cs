@@ -1,19 +1,36 @@
-using System;
-using ModelLayer.Enums;
-using ModelLayer.Models;
-using BusinessLayer.Services;
+using ControllerLayer.Interfaces;
+using ModelLayer.DTOs;
+using QuantityMeasurementApp.Interfaces;
 
 namespace QuantityMeasurementApp.Menu
 {
-    public class QuantityMeasurementAppMenu
+    /// <summary>
+    /// Console-based interactive menu for the Quantity Measurement application.
+    ///
+    /// UC15 changes vs UC14:
+    ///  - Implements <see cref="IMenu"/> so Program.cs depends on the abstraction.
+    ///  - Depends on <see cref="IQuantityMeasurementController"/> (injected), NOT on
+    ///    the concrete service class — following Dependency Inversion Principle.
+    ///  - Builds QuantityDTO objects from user input and passes them to the controller.
+    ///  - All business logic has been removed; this class is presentation only.
+    ///  - Quantity&lt;T&gt; is no longer constructed here; DTOs are used instead.
+    /// </summary>
+    public class QuantityMeasurementAppMenu : IMenu
     {
-        private readonly QuantityMeasurementService measurementService = new QuantityMeasurementService();
+        private readonly IQuantityMeasurementController _controller;
+
+        public QuantityMeasurementAppMenu(IQuantityMeasurementController controller)
+        {
+            _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+        }
+
+        // ── Main loop ─────────────────────────────────────────────────────────
 
         public void Run()
         {
-            bool terminateProgram = false;
+            bool exit = false;
 
-            while (!terminateProgram)
+            while (!exit)
             {
                 Console.WriteLine("\n-----------------------");
                 Console.WriteLine("Quantity Measurement App");
@@ -24,259 +41,154 @@ namespace QuantityMeasurementApp.Menu
                 Console.WriteLine("4. Temperature Measurement");
                 Console.WriteLine("5. Exit");
 
-                string menuChoice = Console.ReadLine() ?? "";
-
-                switch (menuChoice)
+                switch (Console.ReadLine()?.Trim())
                 {
-                    case "1":
-                        RunCategory<LengthUnit>("Length", "0:Inches, 1:Feet, 2:Yards, 3:CM");
-                        break;
-
-                    case "2":
-                        RunCategory<WeightUnit>("Weight", "0:Grams, 1:Kilograms, 2:Pounds");
-                        break;
-
-                    case "3":
-                        RunCategory<VolumeUnit>("Volume", "0:Liter, 1:MilliLiter, 2:Gallon");
-                        break;
-
-                    case "4":
-                        RunCategory<TemperatureUnit>("Temperature", "0:Celsius, 1:Fahrenheit, 2:Kelvin");
-                        break;
-
-                    case "5":
-                        terminateProgram = true;
-                        break;
-
-                    default:
-                        Console.WriteLine("Invalid choice");
-                        break;
+                    case "1": RunCategory("Length",      "0:Inches  1:Feet  2:Yards  3:Centimeters",
+                                          new[] { "Inches", "Feet", "Yards", "Centimeters" }); break;
+                    case "2": RunCategory("Weight",      "0:Grams  1:Kilograms  2:Pound",
+                                          new[] { "Grams", "Kilograms", "Pound" }); break;
+                    case "3": RunCategory("Volume",      "0:Litre  1:MilliLiter  2:Gallon",
+                                          new[] { "Litre", "MilliLiter", "Gallon" }); break;
+                    case "4": RunCategory("Temperature", "0:Celsius  1:Fahrenheit  2:Kelvin",
+                                          new[] { "Celsius", "Fahrenheit", "Kelvin" }); break;
+                    case "5": exit = true; break;
+                    default: Console.WriteLine("Invalid choice."); break;
                 }
             }
         }
 
-        /// <summary>
-        /// Handles operations for a chosen measurement category.
-        /// </summary>
-        private void RunCategory<T>(string categoryTitle, string unitOptions) where T : struct, Enum
+        // ── Category sub-menu ─────────────────────────────────────────────────
+
+        private void RunCategory(string category, string unitOptions, string[] units)
         {
-            bool goBack = false;
+            bool back = false;
 
-            while (!goBack)
+            while (!back)
             {
-                Console.WriteLine($"\n--- {categoryTitle} Measurement ---");
-                Console.WriteLine("1. Conversion\n2. Comparison\n3. Addition\n4. subtraction\n5. Divide\n6. back");
+                Console.WriteLine($"\n--- {category} Measurement ---");
+                Console.WriteLine("1. Conversion\n2. Comparison\n3. Addition\n4. Subtraction\n5. Divide\n6. Back");
 
-                string actionChoice = Console.ReadLine() ?? "";
-
-                switch (actionChoice)
+                switch (Console.ReadLine()?.Trim())
                 {
-                    case "1":
-                        HandleConversion<T>(unitOptions);
-                        break;
-
-                    case "2":
-                        HandleComparison<T>(unitOptions);
-                        break;
-
-                    case "3":
-                        HandleAddition<T>(unitOptions);
-                        break;
-
-                    case "4":
-                        HandleSubtraction<T>(unitOptions);
-                        break;
-
-                    case "5":
-                        HandleDivision<T>(unitOptions);
-                        break;
-
-                    case "6":
-                        goBack = true;
-                        break;
-
-                    default:
-                        Console.WriteLine("Invalid Choice");
-                        break;
+                    case "1": HandleConversion(category, unitOptions, units);  break;
+                    case "2": HandleComparison(category, unitOptions, units);  break;
+                    case "3": HandleAddition(category, unitOptions, units);    break;
+                    case "4": HandleSubtraction(category, unitOptions, units); break;
+                    case "5": HandleDivision(category, unitOptions, units);    break;
+                    case "6": back = true; break;
+                    default: Console.WriteLine("Invalid choice."); break;
                 }
             }
         }
 
-        /// <summary>
-        /// Calculates the ratio between two quantities.
-        /// </summary>
-        private void HandleDivision<T>(string unitOptions) where T : struct, Enum
+        // ── Operation handlers ────────────────────────────────────────────────
+
+        private void HandleConversion(string category, string unitOptions, string[] units)
         {
             try
             {
                 Console.WriteLine(unitOptions);
+                var input = ReadSingleQuantity(category, units);
 
-                Console.Write("Value 1: ");
-                double firstNumber = double.Parse(Console.ReadLine()!);
+                Console.Write("Target unit index: ");
+                string targetUnit = SelectUnit(units);
 
-                Console.Write("Unit 1 Index: ");
-                T firstUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Console.Write("Value 2: ");
-                double secondNumber = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 2 Index: ");
-                T secondUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                double ratio = measurementService.Divide(firstNumber, firstUnit, secondNumber, secondUnit);
-
-                Console.WriteLine($"\nResult Ratio: {ratio} (Dimensionless)");
+                var result = _controller.PerformConversion(input, targetUnit);
+                DisplayResult("Conversion", result);
             }
-            catch (ArithmeticException error)
-            {
-                Console.WriteLine("Math Error: " + error.Message);
-            }
-            catch (Exception error)
-            {
-                Console.WriteLine("Error: " + error.Message);
-            }
+            catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
         }
 
-        /// <summary>
-        /// Subtracts one quantity from another.
-        /// </summary>
-        private void HandleSubtraction<T>(string unitOptions) where T : struct, Enum
+        private void HandleComparison(string category, string unitOptions, string[] units)
         {
             try
             {
                 Console.WriteLine(unitOptions);
-
-                Console.Write("Value 1: ");
-                double firstValue = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 1 Index: ");
-                T firstUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Console.Write("Value 2: ");
-                double secondValue = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 2 Index: ");
-                T secondUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Quantity<T> firstQuantity = new Quantity<T>(firstValue, firstUnit);
-                Quantity<T> secondQuantity = new Quantity<T>(secondValue, secondUnit);
-
-                Console.Write("Explicit target selection (Y/N): ");
-
-                if ((Console.ReadLine() ?? "").ToLower() == "y")
-                {
-                    Console.Write("Target Unit Index: ");
-                    T selectedUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                    Console.WriteLine($"Result: {measurementService.Subtract(firstQuantity, secondQuantity, selectedUnit)}");
-                }
-                else
-                {
-                    Console.WriteLine($"Result: {measurementService.Subtract(firstQuantity, secondQuantity, firstQuantity.Unit)}");
-                }
+                var (q1, q2) = ReadTwoQuantities(category, units);
+                var result   = _controller.PerformComparison(q1, q2);
+                Console.WriteLine($"\nResult: {q1} {(result.Value == 1 ? "==" : "!=")} {q2}");
             }
-            catch (Exception error)
-            {
-                Console.WriteLine("Error: " + error.Message);
-            }
+            catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
         }
 
-        private void HandleComparison<T>(string unitOptions) where T : struct, Enum
+        private void HandleAddition(string category, string unitOptions, string[] units)
         {
             try
             {
                 Console.WriteLine(unitOptions);
-
-                Console.Write("Value 1: ");
-                double firstNumber = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 1 Index: ");
-                T firstUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Console.Write("Value 2: ");
-                double secondNumber = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 2 Index: ");
-                T secondUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Quantity<T> quantityA = new Quantity<T>(firstNumber, firstUnit);
-                Quantity<T> quantityB = new Quantity<T>(secondNumber, secondUnit);
-
-                bool areEqual = measurementService.Compare(quantityA, quantityB);
-
-                Console.WriteLine($"\nResult: {quantityA} {(areEqual ? "==" : "!=")} {quantityB}");
+                var (q1, q2) = ReadTwoQuantities(category, units);
+                var result   = _controller.PerformAddition(q1, q2);
+                DisplayResult("Addition", result);
             }
-            catch (Exception error)
-            {
-                Console.WriteLine("Error: " + error.Message);
-            }
+            catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
         }
 
-        private void HandleConversion<T>(string unitOptions) where T : struct, Enum
+        private void HandleSubtraction(string category, string unitOptions, string[] units)
         {
             try
             {
                 Console.WriteLine(unitOptions);
-
-                Console.Write("Enter Value: ");
-                double enteredValue = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Source Unit Index: ");
-                T sourceUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Console.Write("Target Unit Index: ");
-                T targetUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Quantity<T> initialQuantity = new Quantity<T>(enteredValue, sourceUnit);
-                Quantity<T> convertedQuantity = measurementService.DemonstrateConversion(initialQuantity, targetUnit);
-
-                Console.WriteLine($"Result: {convertedQuantity}");
+                var (q1, q2) = ReadTwoQuantities(category, units);
+                var result   = _controller.PerformSubtraction(q1, q2);
+                DisplayResult("Subtraction", result);
             }
-            catch (Exception error)
-            {
-                Console.WriteLine("Error: " + error.Message);
-            }
+            catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
         }
 
-        private void HandleAddition<T>(string unitOptions) where T : struct, Enum
+        private void HandleDivision(string category, string unitOptions, string[] units)
         {
             try
             {
                 Console.WriteLine(unitOptions);
-
-                Console.Write("Value 1: ");
-                double firstNumber = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 1 Index: ");
-                T firstUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Console.Write("Value 2: ");
-                double secondNumber = double.Parse(Console.ReadLine()!);
-
-                Console.Write("Unit 2 Index: ");
-                T secondUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                Quantity<T> quantityOne = new Quantity<T>(firstNumber, firstUnit);
-                Quantity<T> quantityTwo = new Quantity<T>(secondNumber, secondUnit);
-
-                Console.Write("Explicit target selection (Y/N): ");
-
-                if ((Console.ReadLine() ?? "").ToLower() == "y")
-                {
-                    Console.Write("Target Unit Index: ");
-                    T chosenUnit = (T)(object)int.Parse(Console.ReadLine()!);
-
-                    Console.WriteLine($"Result: {measurementService.DemonstrateAddition(quantityOne, quantityTwo, chosenUnit)}");
-                }
-                else
-                {
-                    Console.WriteLine($"Result: {measurementService.DemonstrateAddition(quantityOne, quantityTwo)}");
-                }
+                var (q1, q2) = ReadTwoQuantities(category, units);
+                var result   = _controller.PerformDivision(q1, q2);
+                Console.WriteLine($"\nRatio: {result.Value} (Dimensionless)");
             }
-            catch (Exception error)
-            {
-                Console.WriteLine("Error: " + error.Message);
-            }
+            catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
+        }
+
+        // ── Input helpers ─────────────────────────────────────────────────────
+
+        private QuantityDTO ReadSingleQuantity(string category, string[] units)
+        {
+            Console.Write("Enter value: ");
+            double value = double.Parse(Console.ReadLine()!);
+
+            Console.Write("Unit index: ");
+            string unit = SelectUnit(units);
+
+            return new QuantityDTO(value, unit, category);
+        }
+
+        private (QuantityDTO, QuantityDTO) ReadTwoQuantities(string category, string[] units)
+        {
+            Console.Write("Value 1: ");
+            double v1 = double.Parse(Console.ReadLine()!);
+            Console.Write("Unit 1 index: ");
+            string u1 = SelectUnit(units);
+
+            Console.Write("Value 2: ");
+            double v2 = double.Parse(Console.ReadLine()!);
+            Console.Write("Unit 2 index: ");
+            string u2 = SelectUnit(units);
+
+            return (new QuantityDTO(v1, u1, category), new QuantityDTO(v2, u2, category));
+        }
+
+        private static string SelectUnit(string[] units)
+        {
+            int idx = int.Parse(Console.ReadLine()!);
+            if (idx < 0 || idx >= units.Length)
+                throw new ArgumentOutOfRangeException("Unit index out of range.");
+            return units[idx];
+        }
+
+        private static void DisplayResult(string operation, QuantityDTO result)
+        {
+            if (result.IsError)
+                Console.WriteLine($"\n[{operation} Error] {result.ErrorMessage}");
+            else
+                Console.WriteLine($"\nResult: {result}");
         }
     }
 }
