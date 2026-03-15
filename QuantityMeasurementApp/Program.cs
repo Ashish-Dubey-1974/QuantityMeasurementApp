@@ -1,42 +1,58 @@
+using System;
 using BusinessLayer.Services;
 using ControllerLayer.Controllers;
 using QuantityMeasurementApp.Interfaces;
 using QuantityMeasurementApp.Menu;
+using RepoLayer.Interfaces;
 using RepoLayer.Repositories;
 
 namespace QuantityMeasurementApp
 {
-    /// <summary>
-    /// Application entry point for the Quantity Measurement system (UC15).
-    ///
-    /// UC15 responsibilities:
-    ///  - Wire up all dependencies using the Factory pattern (manual DI).
-    ///  - Hand control to IMenu.Run() and nothing else.
-    ///  - Contain zero business logic.
-    ///
-    /// Dependency chain (bottom → top):
-    ///   QuantityRepository (Singleton)
-    ///       → QuantityMeasurementService
-    ///           → QuantityMeasurementController
-    ///               → QuantityMeasurementAppMenu   (implements IMenu)
-    ///                   → Program.Main
-    ///
-    /// Dependency Injection: every layer receives its dependencies through
-    /// constructor injection, making future framework integration (e.g. ASP.NET DI,
-    /// Microsoft.Extensions.DependencyInjection) straightforward.
-    /// </summary>
     internal class Program
     {
         private static void Main(string[] args)
         {
-            // Factory: build and wire all layers
-            var repository  = QuantityRepository.Instance;                    // Singleton
-            var service     = new QuantityMeasurementService(repository);     // Business
-            var controller  = new QuantityMeasurementController(service);     // Controller / Facade
-            IMenu menu      = new QuantityMeasurementAppMenu(controller);     // Presentation
+            IQuantityRepository repository = CreateRepository();
 
-            // Delegate: entry point only starts the app, owns no logic
+            var service    = new QuantityMeasurementService(repository);
+            var controller = new QuantityMeasurementController(service);
+            IMenu menu     = new QuantityMeasurementAppMenu(controller);
+
+            Console.WriteLine($"[UC16] Using repository: {repository.GetType().Name}");
+            Console.WriteLine("[UC16] Database auto-created if not found.");
+
             menu.Run();
+
+            Console.WriteLine($"\n[UC16] Total operations recorded: {repository.GetTotalCount()}");
+            PrintHistory(repository);
+
+            if (repository is IDisposable d)
+                d.Dispose();
+        }
+
+        private static IQuantityRepository CreateRepository()
+        {
+            if (AppConfig.RepositoryType.Equals("cache", StringComparison.OrdinalIgnoreCase))
+                return QuantityRepository.Instance;
+
+            try
+            {
+                return new QuantityDatabaseRepository(AppConfig.ConnectionString);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARN] DB unavailable ({ex.Message}). Falling back to in-memory cache.");
+                return QuantityRepository.Instance;
+            }
+        }
+
+        private static void PrintHistory(IQuantityRepository repo)
+        {
+            var all = repo.GetAll();
+            if (all.Count == 0) return;
+            Console.WriteLine("\n--- Operation History ---");
+            foreach (var e in all)
+                Console.WriteLine(e);
         }
     }
 }

@@ -63,7 +63,8 @@ namespace ModelLayer.Entities
         /// <summary>
         /// Creates a successful dual-operand entity (e.g. addition, comparison).
         /// </summary>
-        public QuantityMeasurementEntity(QuantityDTO operand1, QuantityDTO operand2,string operationType, QuantityDTO result)
+        public QuantityMeasurementEntity(QuantityDTO operand1, QuantityDTO operand2,
+                                         string operationType, QuantityDTO result)
         {
             Operand1      = operand1;
             Operand2      = operand2;
@@ -79,7 +80,8 @@ namespace ModelLayer.Entities
         /// <summary>
         /// Creates an error-state entity when an exception occurred during the operation.
         /// </summary>
-        public QuantityMeasurementEntity(QuantityDTO? operand1, QuantityDTO? operand2,string operationType, string errorMessage)
+        public QuantityMeasurementEntity(QuantityDTO? operand1, QuantityDTO? operand2,
+                                         string operationType, string errorMessage)
         {
             Operand1      = operand1;
             Operand2      = operand2;
