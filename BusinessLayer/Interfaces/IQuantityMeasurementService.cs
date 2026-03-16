@@ -1,6 +1,6 @@
 using System;
 using ModelLayer.DTOs;
-using ModelLayer.Models;
+using BusinessLayer.Models;
 
 namespace BusinessLayer.Interfaces
 {

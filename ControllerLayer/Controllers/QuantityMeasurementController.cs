@@ -34,19 +34,14 @@ namespace ControllerLayer.Controllers
             _service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
-        public QuantityDTO PerformConversion(QuantityDTO input, string targetUnitName)
-            => _service.Convert(input, targetUnitName);
+        public QuantityDTO PerformConversion(QuantityDTO input, string targetUnitName)=> _service.Convert(input, targetUnitName);
 
-        public QuantityDTO PerformComparison(QuantityDTO first, QuantityDTO second)
-            => _service.Compare(first, second);
+        public QuantityDTO PerformComparison(QuantityDTO first, QuantityDTO second)=> _service.Compare(first, second);
 
-        public QuantityDTO PerformAddition(QuantityDTO first, QuantityDTO second)
-            => _service.Add(first, second);
+        public QuantityDTO PerformAddition(QuantityDTO first, QuantityDTO second)=> _service.Add(first, second);
 
-        public QuantityDTO PerformSubtraction(QuantityDTO first, QuantityDTO second)
-            => _service.Subtract(first, second);
+        public QuantityDTO PerformSubtraction(QuantityDTO first, QuantityDTO second)=> _service.Subtract(first, second);
 
-        public QuantityDTO PerformDivision(QuantityDTO first, QuantityDTO second)
-            => _service.Divide(first, second);
+        public QuantityDTO PerformDivision(QuantityDTO first, QuantityDTO second)=> _service.Divide(first, second);
     }
 }

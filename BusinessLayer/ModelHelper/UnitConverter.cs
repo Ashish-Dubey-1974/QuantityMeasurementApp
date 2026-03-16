@@ -1,7 +1,7 @@
 using System;
 using ModelLayer.Enums;
 
-namespace ModelLayer.Helpers
+namespace BusinessLayer.ModelHelper
 {
     /// <summary>
     /// Centralized utility for all unit conversions across every measurement category.
@@ -21,11 +21,9 @@ namespace ModelLayer.Helpers
         // ── Length (base unit: inches) ────────────────────────────────────────
         private static readonly double[] LengthFactors = { 1.0, 12.0, 36.0, 0.393701 };
 
-        public static double ToBaseLength(LengthUnit unit, double value)
-            => value * LengthFactors[(int)unit];
+        public static double ToBaseLength(LengthUnit unit, double value)=> value * LengthFactors[(int)unit];
 
-        public static double FromBaseLength(LengthUnit unit, double baseValue)
-            => baseValue / LengthFactors[(int)unit];
+        public static double FromBaseLength(LengthUnit unit, double baseValue)=> baseValue / LengthFactors[(int)unit];
 
         public static string GetLengthSymbol(LengthUnit unit) => unit switch
         {

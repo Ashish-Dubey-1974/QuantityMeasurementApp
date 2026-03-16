@@ -1,6 +1,6 @@
 using System;
 
-namespace ModelLayer.Models
+namespace BusinessLayer.Models
 {
     /// <summary>
     /// A generic POJO (Plain Old CLR Object) used internally within the service layer

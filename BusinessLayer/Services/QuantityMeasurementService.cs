@@ -5,8 +5,8 @@ using BusinessLayer.Interfaces;
 using ModelLayer.DTOs;
 using ModelLayer.Entities;
 using ModelLayer.Enums;
-using ModelLayer.Helpers;
-using ModelLayer.Models;
+using BusinessLayer.ModelHelper;
+using BusinessLayer.Models;
 using RepoLayer.Interfaces;
 
 namespace BusinessLayer.Services

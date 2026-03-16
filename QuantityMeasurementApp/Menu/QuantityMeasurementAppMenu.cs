@@ -43,14 +43,14 @@ namespace QuantityMeasurementApp.Menu
 
                 switch (Console.ReadLine()?.Trim())
                 {
-                    case "1": RunCategory("Length",      "0:Inches  1:Feet  2:Yards  3:Centimeters",
-                                          new[] { "Inches", "Feet", "Yards", "Centimeters" }); break;
-                    case "2": RunCategory("Weight",      "0:Grams  1:Kilograms  2:Pound",
-                                          new[] { "Grams", "Kilograms", "Pound" }); break;
-                    case "3": RunCategory("Volume",      "0:Litre  1:MilliLiter  2:Gallon",
-                                          new[] { "Litre", "MilliLiter", "Gallon" }); break;
-                    case "4": RunCategory("Temperature", "0:Celsius  1:Fahrenheit  2:Kelvin",
-                                          new[] { "Celsius", "Fahrenheit", "Kelvin" }); break;
+                    case "1":
+                        RunCategory("Length", "0:Inches  1:Feet  2:Yards  3:Centimeters",new[] { "Inches", "Feet", "Yards", "Centimeters" }); break;
+                    case "2":
+                        RunCategory("Weight", "0:Grams  1:Kilograms  2:Pound",new[] { "Grams", "Kilograms", "Pound" }); break;
+                    case "3":
+                        RunCategory("Volume", "0:Litre  1:MilliLiter  2:Gallon",new[] { "Litre", "MilliLiter", "Gallon" }); break;
+                    case "4":
+                        RunCategory("Temperature", "0:Celsius  1:Fahrenheit  2:Kelvin",new[] { "Celsius", "Fahrenheit", "Kelvin" }); break;
                     case "5": exit = true; break;
                     default: Console.WriteLine("Invalid choice."); break;
                 }
@@ -70,11 +70,11 @@ namespace QuantityMeasurementApp.Menu
 
                 switch (Console.ReadLine()?.Trim())
                 {
-                    case "1": HandleConversion(category, unitOptions, units);  break;
-                    case "2": HandleComparison(category, unitOptions, units);  break;
-                    case "3": HandleAddition(category, unitOptions, units);    break;
+                    case "1": HandleConversion(category, unitOptions, units); break;
+                    case "2": HandleComparison(category, unitOptions, units); break;
+                    case "3": HandleAddition(category, unitOptions, units); break;
                     case "4": HandleSubtraction(category, unitOptions, units); break;
-                    case "5": HandleDivision(category, unitOptions, units);    break;
+                    case "5": HandleDivision(category, unitOptions, units); break;
                     case "6": back = true; break;
                     default: Console.WriteLine("Invalid choice."); break;
                 }
@@ -88,12 +88,12 @@ namespace QuantityMeasurementApp.Menu
             try
             {
                 Console.WriteLine(unitOptions);
-                var input = ReadSingleQuantity(category, units);
+                QuantityDTO input = ReadSingleQuantity(category, units);
 
                 Console.Write("Target unit index: ");
                 string targetUnit = SelectUnit(units);
 
-                var result = _controller.PerformConversion(input, targetUnit);
+                QuantityDTO result = _controller.PerformConversion(input, targetUnit);
                 DisplayResult("Conversion", result);
             }
             catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
@@ -105,7 +105,7 @@ namespace QuantityMeasurementApp.Menu
             {
                 Console.WriteLine(unitOptions);
                 var (q1, q2) = ReadTwoQuantities(category, units);
-                var result   = _controller.PerformComparison(q1, q2);
+                var result = _controller.PerformComparison(q1, q2);
                 Console.WriteLine($"\nResult: {q1} {(result.Value == 1 ? "==" : "!=")} {q2}");
             }
             catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
@@ -117,7 +117,7 @@ namespace QuantityMeasurementApp.Menu
             {
                 Console.WriteLine(unitOptions);
                 var (q1, q2) = ReadTwoQuantities(category, units);
-                var result   = _controller.PerformAddition(q1, q2);
+                var result = _controller.PerformAddition(q1, q2);
                 DisplayResult("Addition", result);
             }
             catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
@@ -129,7 +129,7 @@ namespace QuantityMeasurementApp.Menu
             {
                 Console.WriteLine(unitOptions);
                 var (q1, q2) = ReadTwoQuantities(category, units);
-                var result   = _controller.PerformSubtraction(q1, q2);
+                var result = _controller.PerformSubtraction(q1, q2);
                 DisplayResult("Subtraction", result);
             }
             catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
@@ -141,7 +141,7 @@ namespace QuantityMeasurementApp.Menu
             {
                 Console.WriteLine(unitOptions);
                 var (q1, q2) = ReadTwoQuantities(category, units);
-                var result   = _controller.PerformDivision(q1, q2);
+                var result = _controller.PerformDivision(q1, q2);
                 Console.WriteLine($"\nRatio: {result.Value} (Dimensionless)");
             }
             catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }

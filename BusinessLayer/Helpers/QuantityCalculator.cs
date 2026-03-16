@@ -1,7 +1,8 @@
 using System;
 using ModelLayer.Enums;
-using ModelLayer.Helpers;
-using ModelLayer.Models;
+using BusinessLayer.ModelHelper;
+using BusinessLayer.Models;
+
 
 namespace BusinessLayer.Helpers
 {
@@ -19,15 +20,13 @@ namespace BusinessLayer.Helpers
         public static bool AreEqual<T>(Quantity<T> a, Quantity<T> b) where T : struct, Enum
         {
             if (a == null || b == null) return false;
-            return Math.Abs(UnitConverter.ToBase(a.Unit, a.Value)
-                          - UnitConverter.ToBase(b.Unit, b.Value)) < Epsilon;
+            return Math.Abs(UnitConverter.ToBase(a.Unit, a.Value) - UnitConverter.ToBase(b.Unit, b.Value)) < Epsilon;
         }
 
         public static Quantity<T> Add<T>(Quantity<T> a, Quantity<T> b, T? resultUnit = null) where T : struct, Enum
         {
             EnsureCompatible(a, b);
-            double sum = UnitConverter.ToBase(a.Unit, a.Value)
-                       + UnitConverter.ToBase(b.Unit, b.Value);
+            double sum = UnitConverter.ToBase(a.Unit, a.Value) + UnitConverter.ToBase(b.Unit, b.Value);
             T target = resultUnit ?? a.Unit;
             return new Quantity<T>(UnitConverter.FromBase(target, sum), target);
         }
@@ -35,8 +34,7 @@ namespace BusinessLayer.Helpers
         public static Quantity<T> Subtract<T>(Quantity<T> a, Quantity<T> b, T? resultUnit = null) where T : struct, Enum
         {
             EnsureCompatible(a, b);
-            double diff = UnitConverter.ToBase(a.Unit, a.Value)
-                        - UnitConverter.ToBase(b.Unit, b.Value);
+            double diff = UnitConverter.ToBase(a.Unit, a.Value) - UnitConverter.ToBase(b.Unit, b.Value);
             T target = resultUnit ?? a.Unit;
             return new Quantity<T>(Math.Round(UnitConverter.FromBase(target, diff), 2), target);
         }

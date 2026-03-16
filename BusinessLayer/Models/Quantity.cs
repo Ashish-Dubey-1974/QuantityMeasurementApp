@@ -1,7 +1,6 @@
 using System;
-using ModelLayer.Helpers;
-
-namespace ModelLayer.Models
+using BusinessLayer.ModelHelper;
+namespace BusinessLayer.Models
 {
     public sealed class Quantity<TUnit> where TUnit : struct, Enum
     {
@@ -16,7 +15,6 @@ namespace ModelLayer.Models
             Unit  = unit;
         }
 
-        public override string ToString()
-            => $"{Value} {UnitConverter.GetSymbol(Unit)}";
+        public override string ToString()=> $"{Value} {UnitConverter.GetSymbol(Unit)}";
     }
 }
