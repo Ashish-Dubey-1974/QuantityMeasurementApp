@@ -1,13 +1,13 @@
 namespace ModelLayer.Enums
 {
     /// <summary>
-    /// Weight measurement units. Kilogram is used as the base unit.
+    /// Volume measurement units. Litre is used as the base unit.
     /// Conversion logic has been moved to ModelLayer.Helpers.UnitConverter.
     /// </summary>
-    public enum WeightUnit
+    public enum VolumeUnit
     {
-        Grams,
-        Kilograms,
-        Pound
+        Litre,
+        MilliLiter,
+        Gallon
     }
 }

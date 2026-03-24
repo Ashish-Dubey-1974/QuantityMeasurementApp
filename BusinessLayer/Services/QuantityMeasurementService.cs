@@ -1,356 +1,240 @@
 using System;
-using ModelLayer.Models;
-using ModelLayer.Enums;
-using ModelLayer.Interfaces;
-using ModelLayer.DTOs;
+using BusinessLayer.Exceptions;
+using BusinessLayer.Helpers;
 using BusinessLayer.Interfaces;
-using DataAccessLayer.Data;
+using ModelLayer.DTOs;
+using ModelLayer.Entities;
+using ModelLayer.Enums;
+using BusinessLayer.ModelHelper;
+using BusinessLayer.Models;
+using RepoLayer.Interfaces;
 
 namespace BusinessLayer.Services
 {
     public class QuantityMeasurementService : IQuantityMeasurementService
     {
+        private readonly IQuantityRepository _repository;
 
-        private AppDbContext _context;
-
-        public QuantityMeasurementService(AppDbContext context)
+        public QuantityMeasurementService(IQuantityRepository repository)
         {
-            _context = context;
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
-        public QuantityResultDto Add(AddRequestDto request)
+
+        public QuantityDTO Convert(QuantityDTO input, string targetUnitName)
         {
-            switch (request.QuantityType)
+            try
             {
-                case "Length":
-                    return AddInternal<LengthUnit>(request);
-                case "Weight":
-                    return AddInternal<WeightUnit>(request);
-                case "Volume":
-                    return AddInternal<VolumeUnit>(request);
-                case "Temperature":
-                    return AddInternal<TemperatureUnit>(request);
-                default:
-                    throw new NotSupportedException("Invalid quantity type");
+                ValidateDto(input);
+                var result = DispatchConvert(input, targetUnitName);
+                SaveEntity(new QuantityMeasurementEntity(input, "Convert", result));
+                return result;
+            }
+            catch (QuantityMeasurementException) { throw; }
+            catch (Exception ex)
+            {
+                SaveEntity(new QuantityMeasurementEntity(input, null, "Convert", ex.Message));
+                return QuantityDTO.Error(ex.Message);
             }
         }
 
-        public QuantityResultDto AddInternal<T>(AddRequestDto request) where T : struct, Enum
+        public QuantityDTO Compare(QuantityDTO first, QuantityDTO second)
         {
-            var converter = ResolveConverter<T>();
-
-            var q1 = new Quantity<T>(request.Value1, Enum.Parse<T>(request.Unit1, true), converter);
-            var q2 = new Quantity<T>(request.Value2, Enum.Parse<T>(request.Unit2, true), converter);
-
-            return DemonstrateAddition(q1, q2);
-        }
-
-        public QuantityResultDto Subtract(SubtractRequestDto request)
-        {
-            switch (request.QuantityType)
+            try
             {
-                case "Length":
-                    return SubtractInternal<LengthUnit>(request);
-                case "Weight":
-                    return SubtractInternal<WeightUnit>(request);
-                case "Volume":
-                    return SubtractInternal<VolumeUnit>(request);
-                case "Temperature":
-                    return SubtractInternal<TemperatureUnit>(request);
-                default:
-                    throw new NotSupportedException("Invalid quantity type");
+                ValidateDto(first); ValidateDto(second);
+                EnsureSameCategory(first, second);
+                var result = DispatchCompare(first, second);
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Compare", result));
+                return result;
+            }
+            catch (QuantityMeasurementException) { throw; }
+            catch (Exception ex)
+            {
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Compare", ex.Message));
+                return QuantityDTO.Error(ex.Message);
             }
         }
 
-        public QuantityResultDto SubtractInternal<T>(SubtractRequestDto request) where T : struct, Enum
+        public QuantityDTO Add(QuantityDTO first, QuantityDTO second)
         {
-            var converter = ResolveConverter<T>();
-
-            var q1 = new Quantity<T>(request.Value1, Enum.Parse<T>(request.Unit1, true), converter);
-            var q2 = new Quantity<T>(request.Value2, Enum.Parse<T>(request.Unit2, true), converter);
-            var resultUnit = Enum.Parse<T>(request.ResultUnit);
-
-            return Subtract(q1, q2, resultUnit);
-        }
-
-        public DivisionResultDto Divide(DivideRequestDto request)
-        {
-            switch (request.QuantityType)
+            try
             {
-                case "Length":
-                    return DivideInternal<LengthUnit>(request);
-                case "Weight":
-                    return DivideInternal<WeightUnit>(request);
-                case "Volume":
-                    return DivideInternal<VolumeUnit>(request);
-                case "Temperature":
-                    return DivideInternal<TemperatureUnit>(request);
-                default:
-                    throw new NotSupportedException("Invalid quantity type");
+                ValidateDto(first); ValidateDto(second);
+                EnsureSameCategory(first, second);
+                var result = DispatchArithmetic(first, second, "Add");
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Add", result));
+                return result;
+            }
+            catch (QuantityMeasurementException) { throw; }
+            catch (Exception ex)
+            {
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Add", ex.Message));
+                return QuantityDTO.Error(ex.Message);
             }
         }
 
-        public DivisionResultDto DivideInternal<T>(DivideRequestDto request) where T : struct, Enum
+        public QuantityDTO Subtract(QuantityDTO first, QuantityDTO second)
         {
-            var converter = ResolveConverter<T>();
-
-            var q1 = new Quantity<T>(request.Value1, Enum.Parse<T>(request.Unit1, true), converter);
-            var q2 = new Quantity<T>(request.Value2, Enum.Parse<T>(request.Unit2, true), converter);
-
-            return Divide(q1, q2);
-        }
-
-        public QuantityResultDto Convert(ConversionRequestDto request)
-        {
-            switch (request.QuantityType)
+            try
             {
-                case "Length":
-                    return ConvertInteral<LengthUnit>(request);
-                case "Weight":
-                    return ConvertInteral<WeightUnit>(request);
-                case "Volume":
-                    return ConvertInteral<VolumeUnit>(request);
-                case "Temperature":
-                    return ConvertInteral<TemperatureUnit>(request);
-                default:
-                    throw new NotSupportedException("Invalid quantity type");
+                ValidateDto(first); ValidateDto(second);
+                EnsureSameCategory(first, second);
+                var result = DispatchArithmetic(first, second, "Subtract");
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Subtract", result));
+                return result;
+            }
+            catch (QuantityMeasurementException) { throw; }
+            catch (Exception ex)
+            {
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Subtract", ex.Message));
+                return QuantityDTO.Error(ex.Message);
             }
         }
 
-        public QuantityResultDto ConvertInteral<T>(ConversionRequestDto request) where T: struct, Enum
+        public QuantityDTO Divide(QuantityDTO first, QuantityDTO second)
         {
-            var converter = ResolveConverter<T>();
-
-            var quantity = new Quantity<T>(request.Value, Enum.Parse<T>(request.SourceUnit, true), converter);
-
-            var desiredUnit = Enum.Parse<T>(request.TargetUnit);
-
-            return DemonstrateConversion(quantity, desiredUnit);
-        }
-
-        public ComparisonResultDto Compare(ComparisonRequestDto request)
-        {
-            switch (request.QuantityType)
+            try
             {
-                case "Length":
-                    return CompareInternal<LengthUnit>(request);
-                case "Weight":
-                    return CompareInternal<WeightUnit>(request);
-                case "Volume":
-                    return CompareInternal<VolumeUnit>(request);
-                case "Temperature":
-                    return CompareInternal<TemperatureUnit>(request);
-                default:
-                    throw new NotSupportedException("Invalid quantity type");
+                ValidateDto(first); ValidateDto(second);
+                EnsureSameCategory(first, second);
+                var result = DispatchArithmetic(first, second, "Divide");
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Divide", result));
+                return result;
+            }
+            catch (QuantityMeasurementException) { throw; }
+            catch (Exception ex)
+            {
+                SaveEntity(new QuantityMeasurementEntity(first, second, "Divide", ex.Message));
+                return QuantityDTO.Error(ex.Message);
             }
         }
 
-        public ComparisonResultDto CompareInternal<T>(ComparisonRequestDto request) where T : struct, Enum
+        // ── Dispatch helpers ──────────────────────────────────────────────────
+
+        private QuantityDTO DispatchConvert(QuantityDTO input, string targetUnitName)
         {
-            var converter = ResolveConverter<T>();
-
-            var q1 = new Quantity<T>(request.Value1, Enum.Parse<T>(request.Unit1, true), converter);
-            var q2 = new Quantity<T>(request.Value2, Enum.Parse<T>(request.Unit2, true), converter);
-
-            return Compare(q1, q2);
-        }
-
-        private IUnitConverter<T> ResolveConverter<T>() where T : struct, Enum
-        {
-            if (typeof(T) == typeof(LengthUnit))
-                return (IUnitConverter<T>)(object)new LengthUnitConverter();
-
-            if (typeof(T) == typeof(WeightUnit))
-                return (IUnitConverter<T>)(object)new WeightUnitConverter();
-
-            if (typeof(T) == typeof(VolumeUnit))
-                return (IUnitConverter<T>)(object)new VolumeUnitConverter();
-
-            if (typeof(T) == typeof(TemperatureUnit))
-                return (IUnitConverter<T>)(object)new TemperatureUnitConverter();
-
-            throw new NotSupportedException();
-        }
-
-        private QuantityResultDto MapQuantityToDto<T>(Quantity<T> quantity) where T : struct, Enum
-        {
-            return new QuantityResultDto
+            return input.Category.ToLower() switch
             {
-                Value = quantity.Value,
-                UnitSymbol = quantity.ToString().Split(' ')[1]
+                "length"      => DoConvert<LengthUnit>(input, targetUnitName),
+                "weight"      => DoConvert<WeightUnit>(input, targetUnitName),
+                "volume"      => DoConvert<VolumeUnit>(input, targetUnitName),
+                "temperature" => DoConvert<TemperatureUnit>(input, targetUnitName),
+                _             => throw new QuantityMeasurementException($"Unknown category: {input.Category}")
             };
         }
 
-        public ComparisonResultDto Compare<U>(Quantity<U> firstQuantity, Quantity<U> secondQuantity) where U : struct, Enum
+        private QuantityDTO DoConvert<T>(QuantityDTO input, string targetUnitName) where T : struct, Enum
         {
-            var areEqual = firstQuantity.Equals(secondQuantity);
-
-            var entity = new QuantityMeasurement
+            var q      = new Quantity<T>(input.Value, UnitConverter.ParseUnit<T>(input.UnitName));
+            var target = UnitConverter.ParseUnit<T>(targetUnitName);
+            var result = QuantityCalculator.ConvertTo(q, target);
+            return new QuantityDTO(result.Value, targetUnitName, input.Category)
             {
-                Category = typeof(U).Name,
-                Operation = "Comparison",
-                Value1 = firstQuantity.Value,
-                Unit1 = firstQuantity.Unit.ToString(),
-                Value2 = secondQuantity.Value,
-                Unit2 = secondQuantity.Unit.ToString(),
-                ResultValue = areEqual ? 1 : 0,
-                ResultUnit = "Boolean",
-                CreatedAt = DateTime.Now
-            };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return new ComparisonResultDto
-            {
-                AreEqual = areEqual
+                ResultDescription = $"{input} converted to {targetUnitName}"
             };
         }
 
-        public QuantityResultDto DemonstrateConversion<U>(Quantity<U> originalQuantity, U desiredUnit) where U : struct, Enum
+        private QuantityDTO DispatchCompare(QuantityDTO first, QuantityDTO second)
         {
-            var result = originalQuantity.ConvertTo(desiredUnit);
-
-            var entity = new QuantityMeasurement
+            return first.Category.ToLower() switch
             {
-                Category = typeof(U).Name,
-                Operation = "Conversion",
-                Value1 = originalQuantity.Value,
-                Unit1 = originalQuantity.Unit.ToString(),
-                Value2 = null,
-                Unit2 = null,
-                ResultValue = result.Value,
-                ResultUnit = result.Unit.ToString(),
-                CreatedAt = DateTime.Now
-            };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return MapQuantityToDto(result);
-        }
-
-        public QuantityResultDto DemonstrateAddition<U>(Quantity<U> leftOperand, Quantity<U> rightOperand) where U : struct, Enum
-        {
-            var result = leftOperand.Add(rightOperand);
-
-            var entity = new QuantityMeasurement
-            {
-                Category = typeof(U).Name,
-                Operation = "Addition",
-                Value1 = leftOperand.Value,
-                Unit1 = leftOperand.Unit.ToString(),
-                Value2 = rightOperand.Value,
-                Unit2 = rightOperand.Unit.ToString(),
-                ResultValue = result.Value,
-                ResultUnit = result.Unit.ToString(),
-                CreatedAt = DateTime.Now
-            };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return MapQuantityToDto(result);
-        }
-
-        public QuantityResultDto Subtract<U>(Quantity<U> firstValue, Quantity<U> secondValue, U resultUnit) where U : struct, Enum
-        {
-            var result = firstValue.Subtract(secondValue, resultUnit);
-
-            var entity = new QuantityMeasurement
-            {
-                Category = typeof(U).Name,
-                Operation = "Subtraction",
-                Value1 = firstValue.Value,
-                Unit1 = firstValue.Unit.ToString(),
-                Value2 = secondValue.Value,
-                Unit2 = secondValue.Unit.ToString(),
-                ResultValue = result.Value,
-                ResultUnit = result.Unit.ToString(),
-                CreatedAt = DateTime.Now
-            };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return MapQuantityToDto(result);
-        }
-
-        public DivisionResultDto Divide<T>(Quantity<T> dividend, Quantity<T> divisor) where T : struct, Enum
-        {
-            double result = dividend.Divide(divisor);
-
-            var entity = new QuantityMeasurement
-            {
-                Category = typeof(T).Name,
-                Operation = "Division",
-                Value1 = dividend.Value,
-                Unit1 = dividend.Unit.ToString(),
-                Value2 = divisor.Value,
-                Unit2 = divisor.Unit.ToString(),
-                ResultValue = result,
-                ResultUnit = "ratio",
-                CreatedAt = DateTime.Now
-            };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return new DivisionResultDto
-            {
-                Ratio = result
+                "length"      => DoCompare<LengthUnit>(first, second),
+                "weight"      => DoCompare<WeightUnit>(first, second),
+                "volume"      => DoCompare<VolumeUnit>(first, second),
+                "temperature" => DoCompare<TemperatureUnit>(first, second),
+                _             => throw new QuantityMeasurementException($"Unknown category: {first.Category}")
             };
         }
 
-        public QuantityResultDto DemonstrateConversion<U>(double numericValue, U sourceType, U targetType)
-    where U : struct, Enum
+        private QuantityDTO DoCompare<T>(QuantityDTO first, QuantityDTO second) where T : struct, Enum
         {
-            var converter = ResolveConverter<U>();
-
-            Quantity<U> quantity = new Quantity<U>(numericValue, sourceType, converter);
-
-            Quantity<U> converted = quantity.ConvertTo(targetType);
-
-            var entity = new QuantityMeasurement
+            var q1    = new Quantity<T>(first.Value,  UnitConverter.ParseUnit<T>(first.UnitName));
+            var q2    = new Quantity<T>(second.Value, UnitConverter.ParseUnit<T>(second.UnitName));
+            bool equal = QuantityCalculator.AreEqual(q1, q2);
+            return new QuantityDTO(equal ? 1 : 0, "Boolean", first.Category)
             {
-                Category = typeof(U).Name,
-                Operation = "Conversion",
-                Value1 = numericValue,
-                Unit1 = sourceType.ToString(),
-                Value2 = null,
-                Unit2 = null,
-                ResultValue = converted.Value,
-                ResultUnit = converted.Unit.ToString(),
-                CreatedAt = DateTime.Now
+                ResultDescription = equal ? "Equal" : "Not Equal"
             };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return MapQuantityToDto(converted);
         }
 
-        public QuantityResultDto DemonstrateAddition<U>(Quantity<U> leftOperand, Quantity<U> rightOperand, U resultUnit)
-    where U : struct, Enum
+        private QuantityDTO DispatchArithmetic(QuantityDTO first, QuantityDTO second, string op)
         {
-            Quantity<U> result = leftOperand.Add(rightOperand, resultUnit);
-
-            var entity = new QuantityMeasurement
+            return first.Category.ToLower() switch
             {
-                Category = typeof(U).Name,
-                Operation = "Addition",
-                Value1 = leftOperand.Value,
-                Unit1 = leftOperand.Unit.ToString(),
-                Value2 = rightOperand.Value,
-                Unit2 = rightOperand.Unit.ToString(),
-                ResultValue = result.Value,
-                ResultUnit = result.Unit.ToString(),
-                CreatedAt = DateTime.Now
+                "length"      => DoArithmetic<LengthUnit>(first, second, op),
+                "weight"      => DoArithmetic<WeightUnit>(first, second, op),
+                "volume"      => DoArithmetic<VolumeUnit>(first, second, op),
+                "temperature" => DoArithmetic<TemperatureUnit>(first, second, op),
+                _             => throw new QuantityMeasurementException($"Unknown category: {first.Category}")
             };
-
-            _context.QuantityMeasurements.Add(entity);
-            _context.SaveChanges();
-
-            return MapQuantityToDto(result);
         }
+
+        private QuantityDTO DoArithmetic<T>(QuantityDTO first, QuantityDTO second, string op) where T : struct, Enum
+        {
+            var q1 = new Quantity<T>(first.Value,  UnitConverter.ParseUnit<T>(first.UnitName));
+            var q2 = new Quantity<T>(second.Value, UnitConverter.ParseUnit<T>(second.UnitName));
+
+            if (op == "Add")
+            {
+                var r = QuantityCalculator.Add(q1, q2);
+                return new QuantityDTO(r.Value, first.UnitName, first.Category);
+            }
+            if (op == "Subtract")
+            {
+                var r = QuantityCalculator.Subtract(q1, q2);
+                return new QuantityDTO(r.Value, first.UnitName, first.Category);
+            }
+            if (op == "Divide")
+            {
+                double ratio = QuantityCalculator.Divide(q1, q2);
+                return new QuantityDTO(ratio, "Dimensionless", first.Category) { ResultDescription = "Ratio" };
+            }
+            throw new QuantityMeasurementException($"Unknown operation: {op}");
+        }
+
+        // ── Validation ────────────────────────────────────────────────────────
+
+        private static void ValidateDto(QuantityDTO dto)
+        {
+            if (dto == null)                            throw new QuantityMeasurementException("QuantityDTO cannot be null.");
+            if (string.IsNullOrWhiteSpace(dto.Category)) throw new QuantityMeasurementException("QuantityDTO category is required.");
+            if (string.IsNullOrWhiteSpace(dto.UnitName)) throw new QuantityMeasurementException("QuantityDTO unit name is required.");
+        }
+
+        private static void EnsureSameCategory(QuantityDTO a, QuantityDTO b)
+        {
+            if (!string.Equals(a.Category, b.Category, StringComparison.OrdinalIgnoreCase))
+                throw new QuantityMeasurementException(
+                    $"Cross-category operation not allowed: '{a.Category}' vs '{b.Category}'.");
+        }
+
+        private void SaveEntity(QuantityMeasurementEntity entity)
+        {
+            try { _repository.Save(entity); }
+            catch { /* never propagate repo errors to caller */ }
+        }
+
+        // ── Backward-compatible generic API (UC1–UC14) ────────────────────────
+
+        public bool Compare<U>(Quantity<U> first, Quantity<U> second) where U : struct, Enum
+            => QuantityCalculator.AreEqual(first, second);
+
+        public Quantity<U> DemonstrateConversion<U>(Quantity<U> source, U target) where U : struct, Enum
+            => QuantityCalculator.ConvertTo(source, target);
+
+        public double DemonstrateConversion<U>(double value, U sourceUnit, U targetUnit) where U : struct, Enum
+            => QuantityCalculator.ConvertTo(new Quantity<U>(value, sourceUnit), targetUnit).Value;
+
+        public Quantity<U> DemonstrateAddition<U>(Quantity<U> a, Quantity<U> b) where U : struct, Enum
+            => QuantityCalculator.Add(a, b);
+
+        public Quantity<U> DemonstrateAddition<U>(Quantity<U> a, Quantity<U> b, U resultUnit) where U : struct, Enum
+            => QuantityCalculator.Add(a, b, resultUnit);
+
+        public Quantity<U> Subtract<U>(Quantity<U> a, Quantity<U> b, U resultUnit) where U : struct, Enum
+            => QuantityCalculator.Subtract(a, b, resultUnit);
+
+        public double Divide<U>(double valA, U unitA, double valB, U unitB) where U : struct, Enum
+            => QuantityCalculator.Divide(new Quantity<U>(valA, unitA), new Quantity<U>(valB, unitB));
     }
 }

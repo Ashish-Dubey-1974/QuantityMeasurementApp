@@ -1,10 +1,9 @@
-using System;
-
 namespace ModelLayer.Enums
 {
     /// <summary>
-    /// Represents temperature units used in the system.
-    /// Celsius is treated as the reference unit for conversions.
+    /// Temperature units supported in the system.
+    /// Celsius is treated as the reference (base) unit for conversions.
+    /// Conversion logic has been moved to ModelLayer.Helpers.UnitConverter.
     /// </summary>
     public enum TemperatureUnit
     {
