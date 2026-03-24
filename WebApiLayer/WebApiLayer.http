@@ -1,0 +1,6 @@
+@WebApiLayer_HostAddress = http://localhost:5174/swagger/
+
+GET {{WebApiLayer_HostAddress}}
+Accept: application/json
+
+###
