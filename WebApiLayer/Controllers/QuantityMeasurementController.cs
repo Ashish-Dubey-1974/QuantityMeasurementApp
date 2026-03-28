@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer.DTOs;
 using BusinessLayer.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApiLayer.QuantityMeasurementController
 {
+    [Authorize]
     [ApiController]
     [Route("/api/quantitymeasurement")]
     public class QuantityMeasurementController : ControllerBase
