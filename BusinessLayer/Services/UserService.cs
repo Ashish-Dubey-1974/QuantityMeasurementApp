@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.Data;
+using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ModelLayer.DTOs;
@@ -23,38 +24,32 @@ namespace BusinessLayer.Services
         }
 
         // =====================
-        //    REGISTER
+        //    REGISTER (local)
         // =====================
         public AuthResponseDto Register(RegisterDto dto)
         {
-            // 1. Check karo ki email already exist toh nahi karti
             var existingUser = _context.Users
                 .FirstOrDefault(u => u.Email == dto.Email);
 
             if (existingUser != null)
                 throw new Exception("Email already registered.");
 
-            // 2. Salt generate karo (random 32 bytes)
             string salt = GenerateSalt();
-
-            // 3. Password ko salt ke saath hash karo
             string hashedPassword = HashPassword(dto.Password, salt);
 
-            // 4. Naya User object banao
             var user = new User
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
                 Salt = salt,
-                HashedPassword = hashedPassword
+                HashedPassword = hashedPassword,
+                AuthProvider = "local"
             };
 
-            // 5. DB mein save karo
             _context.Users.Add(user);
             _context.SaveChanges();
 
-            // 6. JWT token generate karo aur return karo
             var token = GenerateJwtToken(user);
 
             return new AuthResponseDto
@@ -62,30 +57,28 @@ namespace BusinessLayer.Services
                 Token = token,
                 UserId = user.UserId,
                 Email = user.Email,
+                FirstName = user.FirstName,
+                ProfilePicture = user.ProfilePicture,
                 Message = "Registration successful!"
             };
         }
 
         // =====================
-        //    LOGIN
+        //    LOGIN (local)
         // =====================
         public AuthResponseDto Login(LoginDto dto)
         {
-            // 1. Email se user dhundo DB mein
             var user = _context.Users
-                .FirstOrDefault(u => u.Email == dto.Email);
+                .FirstOrDefault(u => u.Email == dto.Email && u.AuthProvider == "local");
 
             if (user == null)
                 throw new Exception("Invalid email or password.");
 
-            // 2. Incoming password ko STORED salt ke saath hash karo
-            string hashedAttempt = HashPassword(dto.Password, user.Salt);
+            string hashedAttempt = HashPassword(dto.Password, user.Salt!);
 
-            // 3. Compare karo stored hash se
             if (hashedAttempt != user.HashedPassword)
                 throw new Exception("Invalid email or password.");
 
-            // 4. JWT token generate karo aur return karo
             var token = GenerateJwtToken(user);
 
             return new AuthResponseDto
@@ -93,8 +86,86 @@ namespace BusinessLayer.Services
                 Token = token,
                 UserId = user.UserId,
                 Email = user.Email,
+                FirstName = user.FirstName,
+                ProfilePicture = user.ProfilePicture,
                 Message = "Login successful!"
             };
+        }
+
+        // ========================
+        //    GOOGLE LOGIN / SIGNUP
+        // ========================
+        public async Task<AuthResponseDto> GoogleLoginAsync(GoogleAuthDto dto)
+        {
+            // 1. Google ke ID token ko verify karo
+            var payload = await VerifyGoogleTokenAsync(dto.IdToken);
+
+            // 2. Agar already exist karta hai Google user toh login karo
+            var user = _context.Users
+                .FirstOrDefault(u => u.GoogleId == payload.Subject);
+
+            if (user == null)
+            {
+                // 3. Email se check karo — same email se local account toh nahi hai?
+                var emailUser = _context.Users
+                    .FirstOrDefault(u => u.Email == payload.Email);
+
+                if (emailUser != null && emailUser.AuthProvider == "local")
+                    throw new Exception("This email is already registered with a password. Please login with email & password.");
+
+                // 4. Naya Google user create karo
+                user = new User
+                {
+                    FirstName = payload.GivenName ?? payload.Name ?? "User",
+                    LastName = payload.FamilyName ?? "",
+                    Email = payload.Email,
+                    GoogleId = payload.Subject,
+                    ProfilePicture = payload.Picture,
+                    AuthProvider = "google"
+                };
+
+                _context.Users.Add(user);
+                _context.SaveChanges();
+            }
+            else
+            {
+                // 5. Profile picture update karo agar change hua ho
+                user.ProfilePicture = payload.Picture;
+                _context.SaveChanges();
+            }
+
+            var token = GenerateJwtToken(user);
+
+            return new AuthResponseDto
+            {
+                Token = token,
+                UserId = user.UserId,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                ProfilePicture = user.ProfilePicture,
+                Message = "Google login successful!"
+            };
+        }
+
+        // ==============================
+        //    HELPER: Google Token Verify
+        // ==============================
+        private async Task<GoogleJsonWebSignature.Payload> VerifyGoogleTokenAsync(string idToken)
+        {
+            try
+            {
+                var settings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { _config["Google:ClientId"] }
+                };
+
+                var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
+                return payload;
+            }
+            catch (InvalidJwtException)
+            {
+                throw new Exception("Invalid Google token.");
+            }
         }
 
         // =====================
@@ -102,48 +173,38 @@ namespace BusinessLayer.Services
         // =====================
         private string GenerateSalt()
         {
-            // 32 random bytes generate karo — ye har user ka alag hoga
             byte[] saltBytes = RandomNumberGenerator.GetBytes(32);
             return Convert.ToBase64String(saltBytes);
         }
 
-        // =====================
-        //    HELPER: Password hash karo
-        // =====================
+        // ==========================
+        //    HELPER: Password hash
+        // ==========================
         private string HashPassword(string password, string salt)
         {
-            // Salt ko bytes mein convert karo
             byte[] saltBytes = Convert.FromBase64String(salt);
-
-            // Password ko bytes mein convert karo
             byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-
-            // Password + Salt ko combine karo
             byte[] combined = passwordBytes.Concat(saltBytes).ToArray();
-
-            // SHA512 se hash karo
             byte[] hashBytes = SHA512.HashData(combined);
-
             return Convert.ToBase64String(hashBytes);
         }
 
-        // =====================
+        // ==========================
         //    HELPER: JWT Token banao
-        // =====================
+        // ==========================
         private string GenerateJwtToken(User user)
         {
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
 
-            var credentials = new SigningCredentials(
-                key, SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Token mein user ki info daalo (claims)
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim("FirstName", user.FirstName)
+                new Claim("FirstName", user.FirstName),
+                new Claim("AuthProvider", user.AuthProvider)
             };
 
             var token = new JwtSecurityToken(

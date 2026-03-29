@@ -26,7 +26,7 @@ namespace WebApiLayer.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(new { message = e.Message });
             }
         }
 
@@ -41,7 +41,22 @@ namespace WebApiLayer.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(new { message = e.Message });
+            }
+        }
+
+        // POST /api/auth/google
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin(GoogleAuthDto dto)
+        {
+            try
+            {
+                var result = await _userService.GoogleLoginAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = e.Message });
             }
         }
     }

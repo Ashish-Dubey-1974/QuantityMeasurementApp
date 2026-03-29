@@ -4,9 +4,9 @@
 # Accept: application/json
 
 ###
-POST http://localhost:5174/api/quantitymeasurement/add
+POST http://localhost:5000/api/quantitymeasurement/add
 Content-Type: application/json
-# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJqb2huQGV4YW1wbGUuY29tIiwiRmlyc3ROYW1lIjoiSm9obiIsImV4cCI6MTc3NDY3NDQ0OCwiaXNzIjoiUXVhbnRpdHlNZWFzdXJlbWVudEFwcCIsImF1ZCI6IlF1YW50aXR5TWVhc3VyZW1lbnRBcHAifQ.StvOFmXUUWo8_B85F48iQKx0lLArQnwZDbQF_pWz96A
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjUiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJhc2hpc2guZ2xhX2NzLmFpbWwyMkBnbGEuYWMuaW4iLCJGaXJzdE5hbWUiOiJBc2hpc2giLCJBdXRoUHJvdmlkZXIiOiJsb2NhbCIsImV4cCI6MTc3NDc4NDkzNCwiaXNzIjoiUXVhbnRpdHlNZWFzdXJlbWVudEFwcCIsImF1ZCI6IlF1YW50aXR5TWVhc3VyZW1lbnRBcHAifQ.CO6zfdc138fi8PDPGavRMPdRqhB-r117lMsoOWB4t0A
 
 {
   "QuantityType": "Length",
@@ -17,7 +17,7 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:5174/api/auth/register
+POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
@@ -28,10 +28,10 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:5174/api/auth/login
+POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "john@example.com",
-  "password": "Test@123"
+  "email": "ashish.gla_cs.aiml22@gla.ac.in",
+  "password": "Ashish"
 }

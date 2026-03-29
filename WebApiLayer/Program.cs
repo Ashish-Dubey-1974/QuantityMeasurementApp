@@ -36,15 +36,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // ✅ Simple — no OpenApi.Models dependency
+builder.Services.AddSwaggerGen();
+
+// ── CORS for Angular (localhost:4200) ─────────────────
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+// ⚠️ CORS MUST come before Authentication & Authorization
+app.UseCors("AllowAngular");
+
 app.UseHttpsRedirection();
-app.UseAuthentication(); // ← pehle
-app.UseAuthorization();  // ← baad mein
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
